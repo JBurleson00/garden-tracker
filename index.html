@@ -243,12 +243,12 @@ async function gapiReady() {
 }
 
 async function signIn() {
-  await gapiReady();
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID, scope: SCOPE,
     callback: async resp => {
       if (resp.error) { const el=document.getElementById('auth-error'); el.textContent='Error: '+resp.error; el.style.display='block'; return; }
       accessToken = resp.access_token;
+      await gapiReady();
       gapi.client.setToken({access_token: accessToken});
       await loadFromDrive();
       document.getElementById('auth-screen').classList.add('hidden');
