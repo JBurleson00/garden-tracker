@@ -181,10 +181,10 @@
   </div>
 </div>
 
-<!-- Add Plant Modal -->
+<!-- Add / Edit Plant Modal -->
 <div class="modal-overlay" id="add-modal">
   <div class="modal">
-    <h2>Add a plant</h2>
+    <h2 id="modal-title">Add a plant</h2>
     <div class="form-row"><label class="form-label">Name</label><input type="text" id="new-name" placeholder="e.g. Meyer Lemon" /></div>
     <div class="form-row"><label class="form-label">Type</label>
       <select id="new-type">
@@ -210,7 +210,7 @@
     </div>
     <div class="form-row"><label class="form-label">Notes (optional)</label><input type="text" id="new-notes" placeholder="e.g. south-facing, planted spring 2024" /></div>
     <div class="btn-row">
-      <button class="btn btn-primary" style="font-size:14px;padding:10px 20px;" onclick="addPlant()">Add plant</button>
+      <button class="btn btn-primary" style="font-size:14px;padding:10px 20px;" id="modal-save-btn" onclick="savePlant()">Add plant</button>
       <button class="btn" onclick="closeAddModal()">Cancel</button>
     </div>
   </div>
@@ -435,6 +435,9 @@ function renderPlants() {
         <div class="plant-row-name">${p.name}</div>
         <div class="plant-row-meta">${typeLabel[p.type] || p.type} &middot; ${p.container}</div>
       </div>
+      <button class="btn-icon" onclick="editPlant('${p.id}')" title="Edit">
+        <i class="ti ti-pencil" style="font-size:16px;color:var(--text3);"></i>
+      </button>
       <button class="btn-icon" onclick="deletePlant('${p.id}')" title="Remove">
         <i class="ti ti-trash" style="font-size:16px;color:var(--text3);"></i>
       </button>
@@ -442,29 +445,61 @@ function renderPlants() {
   `).join('');
 }
 
-// ── Add / delete plants ────────────────────────────────────
-function openAddModal()  { document.getElementById('add-modal').classList.add('open'); }
+// ── Add / edit / delete plants ─────────────────────────────
+let editingPlantId = null;
+
+function openAddModal() {
+  editingPlantId = null;
+  document.getElementById('modal-title').textContent = 'Add a plant';
+  document.getElementById('modal-save-btn').textContent = 'Add plant';
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-type').value = 'citrus';
+  document.getElementById('new-container').value = '15-gal pot';
+  document.getElementById('new-notes').value = '';
+  document.getElementById('add-modal').classList.add('open');
+}
+
+function editPlant(id) {
+  const plant = state.plants.find(p => p.id === id);
+  if (!plant) return;
+  editingPlantId = id;
+  document.getElementById('modal-title').textContent = 'Edit plant';
+  document.getElementById('modal-save-btn').textContent = 'Save changes';
+  document.getElementById('new-name').value = plant.name;
+  document.getElementById('new-type').value = plant.type;
+  document.getElementById('new-container').value = plant.container;
+  document.getElementById('new-notes').value = plant.notes || '';
+  document.getElementById('add-modal').classList.add('open');
+}
+
 function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
 document.getElementById('add-modal').addEventListener('click', e => {
   if (e.target === document.getElementById('add-modal')) closeAddModal();
 });
 
-function addPlant() {
+function savePlant() {
   const name = document.getElementById('new-name').value.trim();
   if (!name) { alert('Please enter a plant name.'); return; }
-  const plant = {
-    id: Date.now().toString(),
-    name,
-    type: document.getElementById('new-type').value,
-    container: document.getElementById('new-container').value,
-    notes: document.getElementById('new-notes').value.trim()
-  };
-  state.plants.push(plant);
+  if (editingPlantId) {
+    const plant = state.plants.find(p => p.id === editingPlantId);
+    if (plant) {
+      plant.name      = name;
+      plant.type      = document.getElementById('new-type').value;
+      plant.container = document.getElementById('new-container').value;
+      plant.notes     = document.getElementById('new-notes').value.trim();
+    }
+  } else {
+    state.plants.push({
+      id: Date.now().toString(),
+      name,
+      type:      document.getElementById('new-type').value,
+      container: document.getElementById('new-container').value,
+      notes:     document.getElementById('new-notes').value.trim()
+    });
+  }
   saveGardenData();
   renderPlants();
   closeAddModal();
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-notes').value = '';
 }
 
 async function deletePlant(id) {
