@@ -401,9 +401,20 @@ function clearCheckin() {
   out.classList.add('hidden'); out.innerHTML='';
 }
 
+function getApiKey() {
+  let key = localStorage.getItem('anthropic_api_key');
+  if (!key) {
+    key = prompt('Enter your Anthropic API key (stored locally in your browser only):');
+    if (key) localStorage.setItem('anthropic_api_key', key.trim());
+  }
+  return key ? key.trim() : null;
+}
+
 async function runCheckin() {
   const p=(state.plants||[]).find(x=>x.id===state.selectedId);
   if(!p) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { alert('An Anthropic API key is required for advice.'); return; }
   const notes=document.getElementById('checkin-notes').value.trim();
   const output=document.getElementById('advice-output');
   output.classList.remove('hidden');
@@ -422,7 +433,7 @@ async function runCheckin() {
   prompt+=pendingImages.length===0?'\n\nNo photo provided. Give seasonal general advice based on history and plant type.':'\n\nEvaluate the '+(pendingImages.length>1?pendingImages.length+' photos':'photo')+' and give concise care advice.';
   content.push({type:'text',text:prompt});
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content}]})});
     const data=await res.json();
     const advice=data.content?.find(b=>b.type==='text')?.text||'Unable to get advice. Please try again.';
     output.innerHTML='<div class="advice-box">'+advice.replace(/\n/g,'<br>')+'</div>';
