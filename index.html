@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Garden Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf9f6; --surface: #ffffff; --surface2: #f3f1ec;
+    --border: rgba(0,0,0,0.1); --border-md: rgba(0,0,0,0.18);
+    --text: #1a1a18; --text2: #6b6a65; --text3: #a09e98;
+    --accent: #2d5a27; --accent-light: #e8f0e7;
+    --radius: 10px; --radius-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412; --surface: #1e1e1b; --surface2: #272724;
+      --border: rgba(255,255,255,0.1); --border-md: rgba(255,255,255,0.18);
+      --text: #f0ede6; --text2: #9b9890; --text3: #6b6a65;
+      --accent: #7ab870; --accent-light: #1c2b1a;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font-family: Georgia, serif; min-height: 100vh; }
+  .app { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .auth-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; gap: 1.5rem; }
+  .auth-screen h1 { font-size: 28px; font-weight: 400; letter-spacing: -0.02em; }
+  .auth-screen h1 em { font-style: italic; color: var(--accent); }
+  .auth-screen p { font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; color: var(--text2); max-width: 320px; line-height: 1.6; }
+  .google-btn { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 11px 20px; font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; color: var(--text); cursor: pointer; transition: background 0.15s; }
+  .google-btn:hover { background: var(--surface2); }
+  .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; gap: 1rem; }
+  .header-left h1 { font-size: 26px; font-weight: 400; letter-spacing: -0.02em; }
+  .header-left h1 em { font-style: italic; color: var(--accent); }
+  .header-left p { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .btn { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; padding: 8px 16px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border-md); transition: all 0.15s; white-space: nowrap; background: transparent; color: var(--text); }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: transparent; }
+  .btn-primary:hover { opacity: 0.88; background: var(--accent); }
+  .btn-sm { font-size: 12px; padding: 5px 12px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; border-bottom: 0.5px solid var(--border); }
+  .tab { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; padding: 8px 16px; border: none; background: transparent; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; transition: all 0.15s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+  .plant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 12px; }
+  .plant-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem; cursor: pointer; transition: border-color 0.15s; }
+  .plant-card:hover { border-color: var(--border-md); }
+  .plant-card.selected { border: 1.5px solid var(--accent); background: var(--accent-light); }
+  .plant-emoji { font-size: 30px; margin-bottom: 10px; }
+  .plant-name { font-size: 15px; color: var(--text); }
+  .plant-meta { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text2); margin-top: 3px; }
+  .plant-last { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-top: 10px; }
+  .add-plant-card { background: var(--surface2); border: 0.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 1.1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px; gap: 8px; transition: background 0.15s; }
+  .add-plant-card:hover { background: var(--surface); }
+  .add-plant-card span { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); }
+  .section { margin-bottom: 1.25rem; }
+  .section-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+  input[type="text"], select, textarea { width: 100%; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 9px 12px; font-size: 14px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; transition: border-color 0.15s; }
+  input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .photo-upload-area { border: 0.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 2rem 1rem; text-align: center; cursor: pointer; background: var(--surface2); transition: background 0.15s; }
+  .photo-upload-area:hover { background: var(--surface); }
+  .photo-upload-area p { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); margin-top: 8px; }
+  .photo-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .photo-preview-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); border: 0.5px solid var(--border); }
+  #file-input { display: none; }
+  .history-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 0.5px solid var(--border); }
+  .history-thumb { width: 76px; height: 76px; border-radius: var(--radius); object-fit: cover; border: 0.5px solid var(--border); flex-shrink: 0; }
+  .history-thumb-placeholder { width: 76px; height: 76px; border-radius: var(--radius); background: var(--surface2); border: 0.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 22px; }
+  .history-date { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .history-notes { font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-style: italic; }
+  .history-advice { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .advice-box { background: var(--surface2); border-radius: var(--radius-lg); padding: 1rem 1.25rem; border: 0.5px solid var(--border); font-size: 14px; line-height: 1.7; color: var(--text); }
+  .loading-dots { display: inline-flex; gap: 4px; vertical-align: middle; }
+  .loading-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--text2); animation: dot-pulse 1.2s infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot-pulse { 0%,80%,100%{opacity:.2}40%{opacity:1} }
+  .status-bar { font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; margin-bottom: 1.5rem; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .status-dot.saving { background: #ba7517; animation: pulse 1s infinite; }
+  .status-dot.error { background: #a32d2d; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 420px; border: 0.5px solid var(--border-md); }
+  .modal h2 { font-size: 18px; font-weight: 400; margin-bottom: 1.25rem; }
+  .form-row { margin-bottom: 12px; }
+  .form-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-bottom: 5px; display: block; letter-spacing: 0.05em; text-transform: uppercase; }
+  .no-plants { grid-column: 1/-1; text-align: center; padding: 3.5rem 1rem; color: var(--text2); }
+  .no-plants i { font-size: 36px; display: block; margin-bottom: 12px; color: var(--text3); }
+  .no-plants p { font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; }
+  .info-banner { background: var(--accent-light); color: var(--accent); border-radius: var(--radius); padding: 10px 14px; font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; margin-bottom: 1.25rem; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+  .empty-msg { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); padding: 1rem 0; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app" id="auth-screen">
+  <div class="auth-screen">
+    <h1><em>Garden</em> Tracker</h1>
+    <p>Sign in with Google to load and save your garden data in your own Drive.</p>
+    <button class="google-btn" onclick="signIn()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+    <p id="auth-error" style="color:#a32d2d;display:none;font-size:13px;"></p>
+  </div>
+</div>
+
+<div class="app hidden" id="main-app">
+  <div class="header">
+    <div class="header-left">
+      <h1><em>Garden</em> Tracker</h1>
+      <p>San Luis Obispo &middot; Container garden</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="ti ti-plus"></i> Add plant</button>
+      <button class="btn btn-sm" onclick="signOut()" title="Sign out"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Connected to Google Drive</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('plants',this)">My plants</button>
+    <button class="tab" onclick="switchTab('checkin',this)">Check in</button>
+    <button class="tab" onclick="switchTab('history',this)">History</button>
+  </div>
+
+  <div id="tab-plants"><div id="plant-grid" class="plant-grid"></div></div>
+
+  <div id="tab-checkin" class="hidden">
+    <div id="checkin-no-plant">
+      <div class="info-banner"><i class="ti ti-info-circle"></i> Select a plant from My plants first, then return here.</div>
+    </div>
+    <div id="checkin-form" class="hidden">
+      <div class="section">
+        <div class="section-label">Selected plant</div>
+        <div id="selected-plant-info" style="font-size:15px;color:var(--text);"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">Photo</div>
+        <div class="photo-upload-area" onclick="document.getElementById('file-input').click()">
+          <i class="ti ti-camera" style="font-size:26px;color:var(--text3);"></i>
+          <p>Tap to upload a photo (optional but recommended)</p>
+        </div>
+        <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)" />
+        <div id="preview-container"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">Notes (optional)</div>
+        <textarea id="checkin-notes" placeholder="Anything you've noticed lately..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runCheckin()"><i class="ti ti-sparkles"></i> Get advice</button>
+        <button class="btn" onclick="clearCheckin()">Clear</button>
+      </div>
+      <div id="advice-output" class="hidden" style="margin-top:1.25rem;"></div>
+    </div>
+  </div>
+
+  <div id="tab-history" class="hidden">
+    <div id="history-no-plant">
+      <div class="info-banner"><i class="ti ti-info-circle"></i> Select a plant to view its history.</div>
+    </div>
+    <div id="history-content" class="hidden">
+      <div style="font-size:16px;margin-bottom:1.25rem;color:var(--text);" id="history-plant-name"></div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h2>Add a plant</h2>
+    <div class="form-row"><label class="form-label">Name</label><input type="text" id="new-name" placeholder="e.g. Meyer Lemon" /></div>
+    <div class="form-row"><label class="form-label">Type</label>
+      <select id="new-type">
+        <option value="citrus">Citrus tree</option>
+        <option value="apple">Apple tree</option>
+        <option value="peach">Peach / Nectarine tree</option>
+        <option value="fig">Fig tree</option>
+        <option value="avocado">Avocado tree</option>
+        <option value="tomato">Tomato plant</option>
+        <option value="other-fruit">Other fruit tree</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Container size</label>
+      <select id="new-container">
+        <option value="5-gal pot">5-gallon pot</option>
+        <option value="10-gal pot">10-gallon pot</option>
+        <option value="15-gal pot" selected>15-gallon pot</option>
+        <option value="25-gal pot">25-gallon pot</option>
+        <option value="half barrel (30+ gal)">Half barrel (30+ gal)</option>
+        <option value="grow bag">Grow bag</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Notes (optional)</label><input type="text" id="new-notes" placeholder="e.g. planted spring 2024, south-facing" /></div>
+    <div class="btn-row" style="margin-top:1.25rem;">
+      <button class="btn btn-primary" onclick="addPlant()">Add plant</button>
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+const CLIENT_ID = '41312717840-0a5t2as30m8843nt43avco3jml6km46o.apps.googleusercontent.com';
+const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const FILE_NAME = 'garden_tracker_data.json';
+const typeEmoji = {citrus:'🍋',apple:'🍎',peach:'🍑',fig:'🫐',avocado:'🥑',tomato:'🍅','other-fruit':'🌳',other:'🌿'};
+const typeLabel = {citrus:'Citrus tree',apple:'Apple tree',peach:'Peach/Nectarine',fig:'Fig tree',avocado:'Avocado tree',tomato:'Tomato plant','other-fruit':'Fruit tree',other:'Plant'};
+
+let state = {plants:[], selectedId:null};
+let driveFileId = null, tokenClient = null, accessToken = null;
+let pendingImages = [], saveTimer = null;
+
+function setStatus(type, text) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot'+(type==='saving'?' saving':type==='error'?' error':'');
+  document.getElementById('status-text').textContent = text;
+}
+
+async function gapiReady() {
+  return new Promise(resolve => {
+    gapi.load('client', async () => {
+      await gapi.client.init({});
+      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      resolve();
+    });
+  });
+}
+
+async function signIn() {
+  await gapiReady();
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPE,
+    callback: async resp => {
+      if (resp.error) { const el=document.getElementById('auth-error'); el.textContent='Error: '+resp.error; el.style.display='block'; return; }
+      accessToken = resp.access_token;
+      gapi.client.setToken({access_token: accessToken});
+      await loadFromDrive();
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      renderPlants();
+    }
+  });
+  tokenClient.requestAccessToken({prompt:'consent'});
+}
+
+function signOut() {
+  if (accessToken) google.accounts.oauth2.revoke(accessToken, ()=>{});
+  accessToken=null; driveFileId=null; state={plants:[],selectedId:null};
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('auth-screen').classList.remove('hidden');
+}
+
+async function loadFromDrive() {
+  setStatus('saving','Loading from Google Drive...');
+  try {
+    const list = await gapi.client.drive.files.list({q:"name='"+FILE_NAME+"' and trashed=false",fields:'files(id,name)',spaces:'drive'});
+    const files = list.result.files;
+    if (files && files.length > 0) {
+      driveFileId = files[0].id;
+      const res = await gapi.client.drive.files.get({fileId:driveFileId,alt:'media'});
+      const loaded = typeof res.result==='string' ? JSON.parse(res.result) : res.result;
+      if (loaded && loaded.plants) state = loaded;
+    }
+    setStatus('ok','Connected to Google Drive');
+  } catch(e) {
+    setStatus('error','Could not load: '+(e.result?.error?.message||e.message||'error'));
+  }
+}
+
+async function saveToDrive() {
+  if (!accessToken) return;
+  setStatus('saving','Saving...');
+  try {
+    const body = JSON.stringify(state, null, 2);
+    if (driveFileId) {
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',{
+        method:'PATCH',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},body
+      });
+    } else {
+      const meta = await gapi.client.drive.files.create({resource:{name:FILE_NAME,mimeType:'application/json'},fields:'id'});
+      driveFileId = meta.result.id;
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',{
+        method:'PATCH',headers:{'Authorization':'Bearer '+accessToken,'Content-Type':'application/json'},body
+      });
+    }
+    setStatus('ok','Saved to Drive · '+new Date().toLocaleTimeString());
+  } catch(e) {
+    setStatus('error','Save failed: '+(e.result?.error?.message||e.message||'error'));
+  }
+}
+
+function scheduleSave() { clearTimeout(saveTimer); saveTimer=setTimeout(saveToDrive,800); }
+
+function renderPlants() {
+  const grid = document.getElementById('plant-grid');
+  grid.innerHTML = '';
+  if (!state.plants||state.plants.length===0) {
+    grid.innerHTML='<div class="no-plants"><i class="ti ti-plant-2"></i><p>No plants yet.</p></div>';
+  }
+  (state.plants||[]).forEach(p => {
+    const last = p.history&&p.history.length>0
+      ? 'Last check: '+new Date(p.history[p.history.length-1].date).toLocaleDateString('en-US',{month:'short',day:'numeric'})
+      : 'No check-ins yet';
+    const card = document.createElement('div');
+    card.className = 'plant-card'+(state.selectedId===p.id?' selected':'');
+    card.innerHTML = '<div class="plant-emoji">'+(typeEmoji[p.type]||'🌿')+'</div><div class="plant-name">'+p.name+'</div><div class="plant-meta">'+(typeLabel[p.type]||p.type)+' &middot; '+p.container+'</div><div class="plant-last">'+last+'</div>';
+    card.onclick = () => selectPlant(p.id);
+    grid.appendChild(card);
+  });
+  const add = document.createElement('div');
+  add.className='add-plant-card';
+  add.innerHTML='<i class="ti ti-plus" style="font-size:22px;color:var(--text3);"></i><span>Add plant</span>';
+  add.onclick=openAddModal;
+  grid.appendChild(add);
+}
+
+function selectPlant(id) {
+  state.selectedId=id; renderPlants(); updateCheckinView(); updateHistoryView();
+}
+
+function updateCheckinView() {
+  const p=(state.plants||[]).find(x=>x.id===state.selectedId);
+  document.getElementById('checkin-no-plant').classList.toggle('hidden',!!p);
+  document.getElementById('checkin-form').classList.toggle('hidden',!p);
+  if(p) document.getElementById('selected-plant-info').textContent=(typeEmoji[p.type]||'🌿')+' '+p.name;
+}
+
+function updateHistoryView() {
+  const p=(state.plants||[]).find(x=>x.id===state.selectedId);
+  document.getElementById('history-no-plant').classList.toggle('hidden',!!p);
+  document.getElementById('history-content').classList.toggle('hidden',!p);
+  if(!p) return;
+  document.getElementById('history-plant-name').textContent=(typeEmoji[p.type]||'🌿')+' '+p.name+' — '+(p.history||[]).length+' check-in'+((p.history||[]).length!==1?'s':'');
+  const list=document.getElementById('history-list');
+  if(!p.history||p.history.length===0){list.innerHTML='<p class="empty-msg">No check-ins yet.</p>';return;}
+  list.innerHTML=[...p.history].reverse().map(h=>'<div class="history-item">'+(h.thumb?'<img class="history-thumb" src="'+h.thumb+'" alt="Plant photo" />':'<div class="history-thumb-placeholder"><i class="ti ti-plant-2"></i></div>')+'<div style="flex:1;min-width:0;"><div class="history-date">'+new Date(h.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+'</div>'+(h.notes?'<div class="history-notes">"'+h.notes+'"</div>':'')+'<div class="history-advice">'+(h.advice||'<em style="color:var(--text3)">No advice recorded</em>')+'</div></div></div>').join('');
+}
+
+function switchTab(name,el) {
+  ['plants','checkin','history'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==name));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(name==='checkin') updateCheckinView();
+  if(name==='history') updateHistoryView();
+}
+
+function openAddModal(){document.getElementById('add-modal').classList.add('open');}
+function closeAddModal(){document.getElementById('add-modal').classList.remove('open');}
+document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===document.getElementById('add-modal'))closeAddModal();});
+
+function addPlant() {
+  const name=document.getElementById('new-name').value.trim();
+  if(!name){alert('Please enter a plant name.');return;}
+  const plant={id:Date.now().toString(),name,type:document.getElementById('new-type').value,container:document.getElementById('new-container').value,notes:document.getElementById('new-notes').value.trim(),history:[]};
+  if(!state.plants) state.plants=[];
+  state.plants.push(plant); state.selectedId=plant.id;
+  scheduleSave(); renderPlants(); closeAddModal();
+  document.getElementById('new-name').value=''; document.getElementById('new-notes').value='';
+}
+
+function handleFiles(files) {
+  pendingImages=[];
+  const container=document.getElementById('preview-container');
+  container.innerHTML='';
+  const grid=document.createElement('div'); grid.className='photo-preview-grid'; container.appendChild(grid);
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{pendingImages.push(e.target.result);const img=document.createElement('img');img.src=e.target.result;img.alt='preview';grid.appendChild(img);};
+    reader.readAsDataURL(file);
+  });
+}
+
+function clearCheckin() {
+  pendingImages=[];
+  document.getElementById('preview-container').innerHTML='';
+  document.getElementById('checkin-notes').value='';
+  document.getElementById('file-input').value='';
+  const out=document.getElementById('advice-output');
+  out.classList.add('hidden'); out.innerHTML='';
+}
+
+async function runCheckin() {
+  const p=(state.plants||[]).find(x=>x.id===state.selectedId);
+  if(!p) return;
+  const notes=document.getElementById('checkin-notes').value.trim();
+  const output=document.getElementById('advice-output');
+  output.classList.remove('hidden');
+  output.innerHTML='<div class="advice-box" style="color:var(--text2);">Analyzing your plant <span class="loading-dots"><span></span><span></span><span></span></span></div>';
+  const month=new Date().getMonth()+1;
+  const season=month>=3&&month<=5?'spring':month>=6&&month<=8?'summer':month>=9&&month<=11?'fall':'winter';
+  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const histCtx=(p.history||[]).slice(-4).map(h=>'- '+new Date(h.date).toLocaleDateString()+': '+(h.advice||'no advice')+(h.notes?' (note: "'+h.notes+'")'':'')).join('\n');
+  const sys='You are a concise garden assistant helping a parent manage container fruit trees and tomato plants in San Luis Obispo, CA. Today is '+today+' ('+season+').\nRules:\n- ALL plants are in containers due to gophers. Never suggest in-ground planting unless truly critical.\n- Be BRIEF: 2-4 sentences max. User will ask for more detail if needed.\n- Prioritize advice that leads to visible fruit. Do NOT suggest actions that delay fruiting.\n- The user has kids who want to see the plants bear fruit.\n- If nothing needs doing right now, say so simply.\n- Note trends from history if visible.';
+  const content=[];
+  if(pendingImages.length>0) pendingImages.forEach(img=>{const mt=img.startsWith('data:image/png')?'image/png':img.startsWith('data:image/webp')?'image/webp':'image/jpeg';content.push({type:'image',source:{type:'base64',media_type:mt,data:img.split(',')[1]}});});
+  let prompt='Plant: '+p.name+' ('+(typeLabel[p.type]||p.type)+'), container: '+p.container;
+  if(p.notes) prompt+='\nSetup notes: '+p.notes;
+  if(histCtx) prompt+='\n\nRecent history:\n'+histCtx;
+  if(notes) prompt+='\n\nUser notes today: '+notes;
+  prompt+=pendingImages.length===0?'\n\nNo photo provided. Give seasonal general advice based on history and plant type.':'\n\nEvaluate the '+(pendingImages.length>1?pendingImages.length+' photos':'photo')+' and give concise care advice.';
+  content.push({type:'text',text:prompt});
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content}]})});
+    const data=await res.json();
+    const advice=data.content?.find(b=>b.type==='text')?.text||'Unable to get advice. Please try again.';
+    output.innerHTML='<div class="advice-box">'+advice.replace(/\n/g,'<br>')+'</div>';
+    const entry={date:new Date().toISOString(),notes,advice,thumb:pendingImages.length>0?pendingImages[0]:null};
+    if(!p.history) p.history=[];
+    p.history.push(entry);
+    scheduleSave(); renderPlants(); updateHistoryView();
+  } catch(e) {
+    output.innerHTML='<div class="advice-box" style="color:#a32d2d;">Error getting advice. Please try again.</div>';
+  }
+}
+</script>
+</body>
+</html>
