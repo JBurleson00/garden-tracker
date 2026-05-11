@@ -411,7 +411,7 @@ async function runCheckin() {
   const month=new Date().getMonth()+1;
   const season=month>=3&&month<=5?'spring':month>=6&&month<=8?'summer':month>=9&&month<=11?'fall':'winter';
   const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  const histCtx=(p.history||[]).slice(-4).map(h=>'- '+new Date(h.date).toLocaleDateString()+': '+(h.advice||'no advice')+(h.notes?' (note: "'+h.notes+'")'':'')).join('\n');
+  const histCtx=(p.history||[]).slice(-4).map(h=>'- '+new Date(h.date).toLocaleDateString()+': '+(h.advice||'no advice')+(h.notes?' (note: "'+h.notes+'")':'')).join('\n');
   const sys='You are a concise garden assistant helping a parent manage container fruit trees and tomato plants in San Luis Obispo, CA. Today is '+today+' ('+season+').\nRules:\n- ALL plants are in containers due to gophers. Never suggest in-ground planting unless truly critical.\n- Be BRIEF: 2-4 sentences max. User will ask for more detail if needed.\n- Prioritize advice that leads to visible fruit. Do NOT suggest actions that delay fruiting.\n- The user has kids who want to see the plants bear fruit.\n- If nothing needs doing right now, say so simply.\n- Note trends from history if visible.';
   const content=[];
   if(pendingImages.length>0) pendingImages.forEach(img=>{const mt=img.startsWith('data:image/png')?'image/png':img.startsWith('data:image/webp')?'image/webp':'image/jpeg';content.push({type:'image',source:{type:'base64',media_type:mt,data:img.split(',')[1]}});});
