@@ -213,8 +213,8 @@
   </div>
 </div>
 
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://apis.google.com/js/api.js" onerror="document.getElementById('auth-error').textContent='Failed to load Google API script. Check your network or disable any ad blockers.';document.getElementById('auth-error').style.display='block';"></script>
+<script src="https://accounts.google.com/gsi/client" onerror="document.getElementById('auth-error').textContent='Failed to load Google Sign-In script. Check your network or disable any ad blockers.';document.getElementById('auth-error').style.display='block';"></script>
 <script>
 const CLIENT_ID = '41312717840-0a5t2as30m8843nt43avco3jml6km46o.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/drive.file';
@@ -243,6 +243,12 @@ async function gapiReady() {
 }
 
 async function signIn() {
+  if (typeof google === 'undefined' || typeof gapi === 'undefined') {
+    const el = document.getElementById('auth-error');
+    el.textContent = 'Google scripts failed to load. Disable any ad blockers and try again.';
+    el.style.display = 'block';
+    return;
+  }
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID, scope: SCOPE,
     callback: async resp => {
