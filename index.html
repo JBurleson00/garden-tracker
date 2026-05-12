@@ -26,6 +26,7 @@
   body { background: var(--bg); color: var(--text); font-family: Georgia, serif; min-height: 100vh; }
   .screen { display: none; min-height: 100vh; flex-direction: column; }
   .screen.active { display: flex; }
+  .hidden { display: none !important; }
 
   /* Auth */
   .auth-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 1.5rem; padding: 2rem; text-align: center; }
@@ -156,6 +157,7 @@
     <input type="file" id="camera-input" accept="image/*" style="display:none" onchange="handlePhotoCapture(this)" />
     <div class="update-actions">
       <button class="btn btn-primary" id="next-btn" onclick="nextPlant()"></button>
+      <button class="btn hidden" id="save-photos-btn" onclick="savePhotosToPhone()" style="width:100%;"><i class="ti ti-device-mobile-down"></i>&nbsp; Save photos to my phone</button>
       <button class="btn-skip" onclick="skipPlant()">Skip — no photo this time</button>
     </div>
   </div>
@@ -749,6 +751,10 @@ function renderUpdateStep() {
   document.getElementById('update-plant-meta').textContent = `${getTypeLabel(plant)} · ${plant.container}`;
   document.getElementById('next-btn').textContent = isLast ? '✓  Submit update' : 'Next plant →';
 
+  // Show "Save photos to my phone" only on last plant when at least one photo has been captured
+  const hasPhotos = Object.keys(updateSession.photos).length > 0;
+  document.getElementById('save-photos-btn').classList.toggle('hidden', !(isLast && hasPhotos));
+
   const zone = document.getElementById('photo-zone');
   const photo = updateSession.photos[plant.id];
   if (photo) {
@@ -775,6 +781,41 @@ function handlePhotoCapture(input) {
 
 function skipPlant() { advanceOrSubmit(); }
 function nextPlant()  { advanceOrSubmit(); }
+
+async function savePhotosToPhone() {
+  const dateSlug = todayLocalDateSlug();
+  const files = [];
+  for (const plant of state.plants) {
+    const photo = updateSession.photos[plant.id];
+    if (!photo) continue;
+    const blob = await (await fetch(photo)).blob();
+    const filename = `${slugify(plant.name)}_${dateSlug}.jpg`;
+    files.push(new File([blob], filename, { type: 'image/jpeg' }));
+  }
+  if (files.length === 0) {
+    alert('No photos to save yet — take a photo first.');
+    return;
+  }
+  // iOS Safari: native share sheet → "Save N Images" goes to Photos
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try {
+      await navigator.share({ files });
+    } catch (e) {
+      // user canceled — no-op
+    }
+    return;
+  }
+  // Fallback: trigger a download for each
+  for (const file of files) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url; a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+}
 
 function advanceOrSubmit() {
   const isLast = updateSession.currentIdx === state.plants.length - 1;
