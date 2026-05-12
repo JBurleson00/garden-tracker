@@ -153,7 +153,7 @@
     <div class="update-plant-name" id="update-plant-name"></div>
     <div class="update-plant-meta" id="update-plant-meta"></div>
     <div class="photo-zone" id="photo-zone" onclick="document.getElementById('camera-input').click()"></div>
-    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoCapture(this)" />
+    <input type="file" id="camera-input" accept="image/*" style="display:none" onchange="handlePhotoCapture(this)" />
     <div class="update-actions">
       <button class="btn btn-primary" id="next-btn" onclick="nextPlant()"></button>
       <button class="btn-skip" onclick="skipPlant()">Skip — no photo this time</button>
@@ -618,7 +618,7 @@ function renderUpdateStep() {
   if (photo) {
     zone.innerHTML = `<img src="${photo}" alt="Plant photo" /><span class="photo-retake">Retake</span>`;
   } else {
-    zone.innerHTML = `<i class="ti ti-camera"></i><span class="photo-zone-hint">Tap to take photo</span>`;
+    zone.innerHTML = `<i class="ti ti-camera"></i><span class="photo-zone-hint">Tap to take or upload photo</span>`;
   }
 }
 
