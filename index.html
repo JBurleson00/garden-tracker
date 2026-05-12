@@ -187,19 +187,24 @@
     <h2 id="modal-title">Add a plant</h2>
     <div class="form-row"><label class="form-label">Name</label><input type="text" id="new-name" placeholder="e.g. Meyer Lemon" /></div>
     <div class="form-row"><label class="form-label">Type</label>
-      <select id="new-type">
-        <option value="citrus">Citrus tree</option>
+      <select id="new-type" onchange="onTypeChange()">
         <option value="apple">Apple tree</option>
-        <option value="peach">Peach / Nectarine tree</option>
-        <option value="fig">Fig tree</option>
+        <option value="apricot">Apricot tree</option>
         <option value="avocado">Avocado tree</option>
+        <option value="citrus">Citrus tree</option>
+        <option value="fig">Fig tree</option>
+        <option value="nectarine">Nectarine tree</option>
+        <option value="peach">Peach tree</option>
         <option value="tomato">Tomato plant</option>
         <option value="other-fruit">Other fruit tree</option>
         <option value="other">Other</option>
       </select>
+      <input type="text" id="new-custom-type" placeholder="Type of plant (e.g. Blueberry bush)" style="margin-top:8px;display:none;" />
     </div>
-    <div class="form-row"><label class="form-label">Container size</label>
+    <div class="form-row"><label class="form-label">Planting</label>
       <select id="new-container">
+        <option value="in-ground">In-ground</option>
+        <option value="raised bed">Raised bed</option>
         <option value="5-gal pot">5-gallon pot</option>
         <option value="10-gal pot">10-gallon pot</option>
         <option value="15-gal pot" selected>15-gallon pot</option>
@@ -225,13 +230,30 @@ const FOLDER_NAME = 'Garden Tracker';
 const DATA_FILE   = 'garden_data.json';
 const DOC_NAME    = 'Garden Update';
 
-const typeEmoji = {citrus:'🍋',apple:'🍎',peach:'🍑',fig:'🫐',avocado:'🥑',tomato:'🍅','other-fruit':'🌳',other:'🌿'};
-const typeLabel  = {citrus:'Citrus tree',apple:'Apple tree',peach:'Peach/Nectarine',fig:'Fig tree',avocado:'Avocado tree',tomato:'Tomato plant','other-fruit':'Fruit tree',other:'Plant'};
+const typeEmoji = {citrus:'🍋',apple:'🍎',peach:'🍑',nectarine:'🍑',apricot:'🍑',fig:'🟣',avocado:'🥑',tomato:'🍅','other-fruit':'🌳',other:'🌿'};
+const typeLabel  = {citrus:'Citrus tree',apple:'Apple tree',peach:'Peach tree',nectarine:'Nectarine tree',apricot:'Apricot tree',fig:'Fig tree',avocado:'Avocado tree',tomato:'Tomato plant','other-fruit':'Fruit tree',other:'Plant'};
 
 let state = { plants: [] };
 let driveFileId = null, driveFolderId = null;
 let tokenClient = null, accessToken = null;
 let updateSession = { photos: {}, currentIdx: 0 };
+
+// ── Persistent auth helpers ────────────────────────────────
+function saveAuth(token, expiresIn) {
+  const expiry = Date.now() + (expiresIn * 1000) - 60000; // 1 min buffer
+  localStorage.setItem('gt_token', token);
+  localStorage.setItem('gt_token_expiry', expiry.toString());
+  localStorage.setItem('gt_authed_before', 'true');
+}
+function getStoredToken() {
+  const t = localStorage.getItem('gt_token');
+  const e = parseInt(localStorage.getItem('gt_token_expiry') || '0');
+  return (t && e > Date.now()) ? t : null;
+}
+function clearAuth() {
+  localStorage.removeItem('gt_token');
+  localStorage.removeItem('gt_token_expiry');
+}
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(name) {
@@ -275,6 +297,7 @@ async function signIn() {
     callback: async resp => {
       if (resp.error) { showAuthError('Sign-in error: ' + resp.error); return; }
       accessToken = resp.access_token;
+      saveAuth(resp.access_token, resp.expires_in || 3600);
       await gapiReady();
       gapi.client.setToken({ access_token: accessToken });
       await ensureDriveFolder();
@@ -283,11 +306,13 @@ async function signIn() {
       showScreen('home');
     }
   });
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function signOut() {
   if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
+  clearAuth();
+  localStorage.removeItem('gt_authed_before');
   accessToken = null; driveFileId = null; driveFolderId = null;
   state = { plants: [] };
   showScreen('auth');
@@ -481,6 +506,55 @@ async function appendUpdateToDoc(updateData) {
   return docId;
 }
 
+// ── Auto-login on page load ────────────────────────────────
+async function tryAutoLogin() {
+  // Wait for Google scripts to load
+  let tries = 0;
+  while ((typeof google === 'undefined' || typeof gapi === 'undefined') && tries < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    tries++;
+  }
+  if (typeof google === 'undefined' || typeof gapi === 'undefined') return;
+
+  const stored = getStoredToken();
+  if (stored) {
+    try {
+      accessToken = stored;
+      await gapiReady();
+      gapi.client.setToken({ access_token: accessToken });
+      await ensureDriveFolder();
+      await loadGardenData();
+      renderPlants();
+      showScreen('home');
+      return;
+    } catch (e) {
+      clearAuth();
+    }
+  }
+
+  // If user has authed before, try silent refresh
+  if (localStorage.getItem('gt_authed_before') === 'true') {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPE,
+      callback: async resp => {
+        if (resp.error) return; // silent failed, user will click sign-in
+        accessToken = resp.access_token;
+        saveAuth(resp.access_token, resp.expires_in || 3600);
+        await gapiReady();
+        gapi.client.setToken({ access_token: accessToken });
+        await ensureDriveFolder();
+        await loadGardenData();
+        renderPlants();
+        showScreen('home');
+      }
+    });
+    client.requestAccessToken({ prompt: '' });
+  }
+}
+
+window.addEventListener('load', tryAutoLogin);
+
 // ── Resize image before upload (max 1200px) ───────────────
 function resizeImage(base64, maxPx = 1200) {
   return new Promise(resolve => {
@@ -509,7 +583,7 @@ function renderPlants() {
       <div class="plant-row-emoji">${typeEmoji[p.type] || '🌿'}</div>
       <div class="plant-row-info">
         <div class="plant-row-name">${p.name}</div>
-        <div class="plant-row-meta">${typeLabel[p.type] || p.type} &middot; ${p.container}</div>
+        <div class="plant-row-meta">${getTypeLabel(p)} &middot; ${p.container}</div>
       </div>
       <button class="btn-icon" onclick="editPlant('${p.id}')" title="Edit">
         <i class="ti ti-pencil" style="font-size:16px;color:var(--text3);"></i>
@@ -524,14 +598,26 @@ function renderPlants() {
 // ── Add / edit / delete plants ─────────────────────────────
 let editingPlantId = null;
 
+function onTypeChange() {
+  const isOther = document.getElementById('new-type').value === 'other';
+  document.getElementById('new-custom-type').style.display = isOther ? 'block' : 'none';
+}
+
+function getTypeLabel(p) {
+  if (p.type === 'other' && p.customType) return p.customType;
+  return typeLabel[p.type] || p.type;
+}
+
 function openAddModal() {
   editingPlantId = null;
   document.getElementById('modal-title').textContent = 'Add a plant';
   document.getElementById('modal-save-btn').textContent = 'Add plant';
   document.getElementById('new-name').value = '';
-  document.getElementById('new-type').value = 'citrus';
+  document.getElementById('new-type').value = 'apple';
+  document.getElementById('new-custom-type').value = '';
   document.getElementById('new-container').value = '15-gal pot';
   document.getElementById('new-notes').value = '';
+  onTypeChange();
   document.getElementById('add-modal').classList.add('open');
 }
 
@@ -543,8 +629,10 @@ function editPlant(id) {
   document.getElementById('modal-save-btn').textContent = 'Save changes';
   document.getElementById('new-name').value = plant.name;
   document.getElementById('new-type').value = plant.type;
+  document.getElementById('new-custom-type').value = plant.customType || '';
   document.getElementById('new-container').value = plant.container;
   document.getElementById('new-notes').value = plant.notes || '';
+  onTypeChange();
   document.getElementById('add-modal').classList.add('open');
 }
 
@@ -556,19 +644,27 @@ document.getElementById('add-modal').addEventListener('click', e => {
 function savePlant() {
   const name = document.getElementById('new-name').value.trim();
   if (!name) { alert('Please enter a plant name.'); return; }
+  const type = document.getElementById('new-type').value;
+  const customType = document.getElementById('new-custom-type').value.trim();
+  if (type === 'other' && !customType) {
+    alert('Please describe the type of plant.');
+    return;
+  }
   if (editingPlantId) {
     const plant = state.plants.find(p => p.id === editingPlantId);
     if (plant) {
-      plant.name      = name;
-      plant.type      = document.getElementById('new-type').value;
-      plant.container = document.getElementById('new-container').value;
-      plant.notes     = document.getElementById('new-notes').value.trim();
+      plant.name       = name;
+      plant.type       = type;
+      plant.customType = type === 'other' ? customType : '';
+      plant.container  = document.getElementById('new-container').value;
+      plant.notes      = document.getElementById('new-notes').value.trim();
     }
   } else {
     state.plants.push({
       id: Date.now().toString(),
       name,
-      type:      document.getElementById('new-type').value,
+      type,
+      customType: type === 'other' ? customType : '',
       container: document.getElementById('new-container').value,
       notes:     document.getElementById('new-notes').value.trim()
     });
@@ -610,7 +706,7 @@ function renderUpdateStep() {
   document.getElementById('update-progress-label').textContent = `Plant ${idx + 1} of ${total}`;
   document.getElementById('update-emoji').textContent     = typeEmoji[plant.type] || '🌿';
   document.getElementById('update-plant-name').textContent = plant.name;
-  document.getElementById('update-plant-meta').textContent = `${typeLabel[plant.type] || plant.type} · ${plant.container}`;
+  document.getElementById('update-plant-meta').textContent = `${getTypeLabel(plant)} · ${plant.container}`;
   document.getElementById('next-btn').textContent = isLast ? '✓  Submit update' : 'Next plant →';
 
   const zone = document.getElementById('photo-zone');
@@ -658,7 +754,7 @@ async function submitUpdate() {
 
   const updateData = {
     date: dateStr,
-    location: 'San Luis Obispo, CA — Container Garden',
+    location: 'Atascadero, CA',
     plants: []
   };
 
@@ -682,7 +778,7 @@ async function submitUpdate() {
       updateData.plants.push({
         name: plant.name,
         emoji: typeEmoji[plant.type] || '🌿',
-        type: typeLabel[plant.type] || plant.type,
+        type: getTypeLabel(plant),
         container: plant.container,
         setup_notes: plant.notes || null,
         photoUrl
