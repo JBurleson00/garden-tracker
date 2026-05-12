@@ -175,8 +175,8 @@
   <div class="center-wrap">
     <div class="big-icon">🌿</div>
     <h2>Update saved!</h2>
-    <p>Your photos are in Google Drive and ready for Claude.</p>
-    <div class="hint-box">Open <strong>Claude</strong> and say<br><strong>"Update Garden"</strong><br>to get your advice.</div>
+    <p>Your photos are now in the <strong>Garden Update</strong> doc on Drive.</p>
+    <div class="hint-box">Open <strong>Claude</strong> and say<br><strong>"Update Garden"</strong><br>to get advice on your latest photos.</div>
     <button class="btn-done" onclick="showScreen('home')">Done</button>
   </div>
 </div>
@@ -223,7 +223,7 @@ const CLIENT_ID   = '41312717840-0a5t2as30m8843nt43avco3jml6km46o.apps.googleuse
 const SCOPE       = 'https://www.googleapis.com/auth/drive.file';
 const FOLDER_NAME = 'Garden Tracker';
 const DATA_FILE   = 'garden_data.json';
-const UPDATE_FILE = 'latest_update.json';
+const DOC_NAME    = 'Garden Update';
 
 const typeEmoji = {citrus:'🍋',apple:'🍎',peach:'🍑',fig:'🫐',avocado:'🥑',tomato:'🍅','other-fruit':'🌳',other:'🌿'};
 const typeLabel  = {citrus:'Citrus tree',apple:'Apple tree',peach:'Peach/Nectarine',fig:'Fig tree',avocado:'Avocado tree',tomato:'Tomato plant','other-fruit':'Fruit tree',other:'Plant'};
@@ -258,6 +258,7 @@ async function gapiReady() {
     gapi.load('client', async () => {
       await gapi.client.init({});
       await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      await gapi.client.load('https://docs.googleapis.com/$discovery/rest?version=v1');
       resolve();
     });
   });
@@ -351,7 +352,7 @@ async function saveGardenData() {
   }
 }
 
-// ── Upload image file to Drive ─────────────────────────────
+// ── Upload image file to Drive (and make it embeddable) ───
 async function uploadImageToDrive(base64Data, filename) {
   const mimeType = base64Data.match(/data:([^;]+);/)[1] || 'image/jpeg';
   const base64   = base64Data.split(',')[1];
@@ -378,31 +379,106 @@ async function uploadImageToDrive(base64Data, filename) {
     },
     body
   });
-  return res.json();
+  const result = await res.json();
+
+  // Make the image publicly viewable so the Docs API can embed it
+  await gapi.client.drive.permissions.create({
+    fileId: result.id,
+    resource: { role: 'reader', type: 'anyone' }
+  });
+
+  return {
+    id: result.id,
+    publicUrl: `https://drive.google.com/uc?id=${result.id}&export=view`
+  };
 }
 
-// ── Save latest_update.json for Claude ────────────────────
-async function saveLatestUpdate(data) {
-  const body = JSON.stringify(data, null, 2);
+// ── Find or create the "Garden Update" Google Doc ─────────
+async function ensureGoogleDoc() {
   const res = await gapi.client.drive.files.list({
-    q: `name='${UPDATE_FILE}' and '${driveFolderId}' in parents and trashed=false`,
+    q: `name='${DOC_NAME}' and '${driveFolderId}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false`,
     fields: 'files(id)'
   });
-  let fileId;
   if (res.result.files && res.result.files.length > 0) {
-    fileId = res.result.files[0].id;
-  } else {
-    const meta = await gapi.client.drive.files.create({
-      resource: { name: UPDATE_FILE, mimeType: 'application/json', parents: [driveFolderId] },
-      fields: 'id'
-    });
-    fileId = meta.result.id;
+    return res.result.files[0].id;
   }
-  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-    method: 'PATCH',
-    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body
+  const create = await gapi.client.drive.files.create({
+    resource: {
+      name: DOC_NAME,
+      mimeType: 'application/vnd.google-apps.document',
+      parents: [driveFolderId]
+    },
+    fields: 'id'
   });
+  return create.result.id;
+}
+
+// ── Append a new update to the top of the Google Doc ──────
+async function appendUpdateToDoc(updateData) {
+  const docId = await ensureGoogleDoc();
+
+  // Build content as ordered segments (text + images)
+  const segments = [];
+  segments.push({ text: `Garden Update — ${updateData.date}\n`, style: 'HEADING_1' });
+  segments.push({ text: `${updateData.location}\n\n`, style: 'NORMAL_TEXT' });
+
+  for (const plant of updateData.plants) {
+    segments.push({ text: `${plant.emoji} ${plant.name}\n`, style: 'HEADING_2' });
+    segments.push({ text: `${plant.type} · ${plant.container}\n`, style: 'NORMAL_TEXT' });
+    if (plant.photoUrl) {
+      segments.push({ image: plant.photoUrl });
+      segments.push({ text: '\n', style: 'NORMAL_TEXT' });
+    } else {
+      segments.push({ text: '(no photo this update)\n', style: 'NORMAL_TEXT' });
+    }
+    if (plant.setup_notes) {
+      segments.push({ text: `Notes: ${plant.setup_notes}\n`, style: 'NORMAL_TEXT' });
+    }
+    segments.push({ text: '\n', style: 'NORMAL_TEXT' });
+  }
+  segments.push({ text: '\n', style: 'NORMAL_TEXT' });
+
+  // Convert to batchUpdate requests; insert at index 1 so newest is at top
+  const requests = [];
+  const styleRanges = [];
+  let idx = 1;
+
+  for (const seg of segments) {
+    if (seg.text) {
+      requests.push({ insertText: { location: { index: idx }, text: seg.text } });
+      if (seg.style) styleRanges.push({ start: idx, end: idx + seg.text.length, style: seg.style });
+      idx += seg.text.length;
+    } else if (seg.image) {
+      requests.push({
+        insertInlineImage: {
+          location: { index: idx },
+          uri: seg.image,
+          objectSize: {
+            height: { magnitude: 240, unit: 'PT' },
+            width:  { magnitude: 240, unit: 'PT' }
+          }
+        }
+      });
+      idx += 1;
+    }
+  }
+
+  for (const r of styleRanges) {
+    requests.push({
+      updateParagraphStyle: {
+        range: { startIndex: r.start, endIndex: r.end },
+        paragraphStyle: { namedStyleType: r.style },
+        fields: 'namedStyleType'
+      }
+    });
+  }
+
+  await gapi.client.docs.documents.batchUpdate({
+    documentId: docId,
+    resource: { requests }
+  });
+
+  return docId;
 }
 
 // ── Resize image before upload (max 1200px) ───────────────
@@ -589,30 +665,37 @@ async function submitUpdate() {
   const photosEntries = Object.entries(updateSession.photos);
   let uploaded = 0;
 
-  for (const plant of state.plants) {
-    const photo = updateSession.photos[plant.id];
-    let photoFilename = null;
+  try {
+    for (const plant of state.plants) {
+      const photo = updateSession.photos[plant.id];
+      let photoUrl = null;
 
-    if (photo) {
-      uploaded++;
-      savingStatus.textContent = `Uploading photo ${uploaded} of ${photosEntries.length}…`;
-      const ext = photo.startsWith('data:image/png') ? 'png' : 'jpg';
-      photoFilename = `${plant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_${dateSlug}.${ext}`;
-      await uploadImageToDrive(photo, photoFilename);
+      if (photo) {
+        uploaded++;
+        savingStatus.textContent = `Uploading photo ${uploaded} of ${photosEntries.length}…`;
+        const ext = photo.startsWith('data:image/png') ? 'png' : 'jpg';
+        const filename = `${plant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}_${dateSlug}.${ext}`;
+        const uploaded_result = await uploadImageToDrive(photo, filename);
+        photoUrl = uploaded_result.publicUrl;
+      }
+
+      updateData.plants.push({
+        name: plant.name,
+        emoji: typeEmoji[plant.type] || '🌿',
+        type: typeLabel[plant.type] || plant.type,
+        container: plant.container,
+        setup_notes: plant.notes || null,
+        photoUrl
+      });
     }
 
-    updateData.plants.push({
-      name: plant.name,
-      type: typeLabel[plant.type] || plant.type,
-      container: plant.container,
-      setup_notes: plant.notes || null,
-      photo: photoFilename
-    });
+    savingStatus.textContent = 'Updating Garden Update doc…';
+    await appendUpdateToDoc(updateData);
+    showScreen('success');
+  } catch (e) {
+    alert('Save failed: ' + (e.result?.error?.message || e.message || 'error'));
+    showScreen('home');
   }
-
-  savingStatus.textContent = 'Saving update file…';
-  await saveLatestUpdate(updateData);
-  showScreen('success');
 }
 </script>
 </body>
