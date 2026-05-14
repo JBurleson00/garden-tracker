@@ -49,19 +49,19 @@
   .btn:hover { background: var(--surface2); }
   .btn-primary { background: var(--accent); color: #fff; border-color: transparent; font-size: 16px; padding: 16px 24px; width: 100%; border-radius: var(--radius-lg); margin-top: 0.5rem; }
   .btn-primary:hover { opacity: 0.88; }
-  .btn-sm { font-size: 12px; padding: 6px 12px; }
   .btn-icon { padding: 8px; border-radius: 50%; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 18px; }
 
+  /* Date picker row */
+  .date-row { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 1.5rem; }
+  .date-row-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  input[type="date"] { background: transparent; color: var(--text); border: none; font-family: Helvetica Neue, Arial, sans-serif; font-size: 15px; outline: none; cursor: pointer; }
+
   /* Plant list */
-  .plant-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .plant-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
   .plant-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; }
-  .plant-row-emoji { font-size: 28px; }
   .plant-row-info { flex: 1; }
   .plant-row-name { font-size: 15px; }
   .plant-row-meta { font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); }
-  .empty-state i { font-size: 36px; display: block; margin-bottom: 12px; color: var(--text3); }
-  .empty-state p { font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; }
 
   /* Status bar */
   .status-bar { font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; padding: 10px 0 14px; }
@@ -70,13 +70,10 @@
   .status-dot.error { background: #a32d2d; }
   @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
 
-  /* Section label */
   .section-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 10px; }
 
   /* Update flow */
-  .update-wrap { display: flex; flex-direction: column; align-items: center; padding: 1.5rem; gap: 1.25rem; flex: 1; }
-  .update-progress { font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
-  .update-plant-emoji { font-size: 48px; line-height: 1; }
+  .update-wrap { display: flex; flex-direction: column; align-items: center; padding: 1.5rem; gap: 1.1rem; flex: 1; }
   .update-plant-name { font-size: 22px; font-weight: 400; text-align: center; }
   .update-plant-meta { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); text-align: center; }
 
@@ -85,6 +82,10 @@
   .photo-zone-hint { font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); }
   .photo-zone i { font-size: 38px; color: var(--text3); }
   .photo-retake { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.55); color: #fff; font-family: Helvetica Neue, Arial, sans-serif; font-size: 12px; padding: 5px 10px; border-radius: 20px; }
+
+  .notes-label { width: 100%; max-width: 380px; font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-top: 0.25rem; }
+  .notes-input { width: 100%; max-width: 380px; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; resize: vertical; min-height: 70px; line-height: 1.45; }
+  .notes-input:focus { border-color: var(--accent); }
 
   .update-actions { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
   .btn-skip { font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; color: var(--text2); background: transparent; border: none; cursor: pointer; padding: 8px; text-align: center; }
@@ -97,17 +98,6 @@
   .hint-box { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; color: var(--text); max-width: 320px; line-height: 1.7; }
   .hint-box strong { color: var(--accent); }
   .btn-done { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-lg); font-family: Helvetica Neue, Arial, sans-serif; font-size: 15px; padding: 14px 32px; cursor: pointer; margin-top: 0.5rem; }
-
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 1.5rem; width: 100%; max-width: 500px; border-top: 0.5px solid var(--border-md); }
-  .modal h2 { font-size: 18px; font-weight: 400; margin-bottom: 1.25rem; }
-  .form-row { margin-bottom: 12px; }
-  .form-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-bottom: 5px; display: block; letter-spacing: 0.05em; text-transform: uppercase; }
-  input[type="text"], select { width: 100%; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; }
-  input[type="text"]:focus, select:focus { border-color: var(--accent); }
-  .btn-row { display: flex; gap: 8px; margin-top: 1.25rem; }
 </style>
 </head>
 <body>
@@ -116,7 +106,7 @@
 <div id="screen-auth" class="screen active">
   <div class="auth-wrap">
     <h1><em>Garden</em> Tracker</h1>
-    <p>Sign in to save plant photos and updates to your Google Drive.</p>
+    <p>Sign in to save plant updates to your Google Drive.</p>
     <button class="google-btn" onclick="signIn()">
       <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Sign in with Google
@@ -129,14 +119,16 @@
 <div id="screen-home" class="screen">
   <div class="app-header">
     <h1><em>Garden</em> Tracker</h1>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <button class="btn btn-sm" onclick="openAddModal()"><i class="ti ti-plus"></i> Add plant</button>
-      <button class="btn-icon" onclick="signOut()" title="Sign out"><i class="ti ti-logout"></i></button>
-    </div>
+    <button class="btn-icon" onclick="signOut()" title="Sign out"><i class="ti ti-logout"></i></button>
   </div>
   <div class="content">
     <div class="status-bar"><div class="status-dot" id="status-dot"></div><span id="status-text">Connected</span></div>
-    <div class="section-label">Your plants</div>
+    <div class="section-label">Update date</div>
+    <div class="date-row">
+      <span class="date-row-label"><i class="ti ti-calendar"></i> Date for this update</span>
+      <input type="date" id="update-date" />
+    </div>
+    <div class="section-label">Plants</div>
     <div class="plant-list" id="plant-list"></div>
     <button class="btn btn-primary" onclick="startUpdate()"><i class="ti ti-camera"></i>&nbsp; Create Update</button>
   </div>
@@ -150,11 +142,12 @@
     <div style="width:36px;"></div>
   </div>
   <div class="update-wrap">
-    <div class="update-plant-emoji" id="update-emoji"></div>
     <div class="update-plant-name" id="update-plant-name"></div>
     <div class="update-plant-meta" id="update-plant-meta"></div>
     <div class="photo-zone" id="photo-zone" onclick="document.getElementById('camera-input').click()"></div>
     <input type="file" id="camera-input" accept="image/*" style="display:none" onchange="handlePhotoCapture(this)" />
+    <span class="notes-label">Notes (optional)</span>
+    <textarea class="notes-input" id="plant-notes" placeholder="Anything you've noticed lately…"></textarea>
     <div class="update-actions">
       <button class="btn btn-primary" id="next-btn" onclick="nextPlant()"></button>
       <button class="btn hidden" id="save-photos-btn" onclick="savePhotosToPhone()" style="width:100%;"><i class="ti ti-device-mobile-down"></i>&nbsp; Save photos to my phone</button>
@@ -177,115 +170,41 @@
   <div class="center-wrap">
     <div class="big-icon">🌿</div>
     <h2>Update saved!</h2>
-    <p>Your photos are now in the <strong>Garden Update</strong> doc on Drive.</p>
-    <div class="hint-box">Open <strong>Claude</strong> and say<br><strong>"Update Garden"</strong><br>to get advice on your latest photos.</div>
+    <p>Your photos and update are in Garden Tracker v2.</p>
+    <div class="hint-box">Open <strong>Claude</strong> and say<br><strong>"Update Garden"</strong><br>for advice on your latest photos.</div>
     <button class="btn-done" onclick="showScreen('home')">Done</button>
   </div>
 </div>
 
-<!-- Add / Edit Plant Modal -->
-<div class="modal-overlay" id="add-modal">
-  <div class="modal">
-    <h2 id="modal-title">Add a plant</h2>
-    <div class="form-row"><label class="form-label">Name</label><input type="text" id="new-name" placeholder="e.g. Meyer Lemon" /></div>
-    <div class="form-row"><label class="form-label">Type</label>
-      <select id="new-type" onchange="onTypeChange()">
-        <option value="apple">Apple tree</option>
-        <option value="apricot">Apricot tree</option>
-        <option value="avocado">Avocado tree</option>
-        <option value="citrus">Citrus tree</option>
-        <option value="fig">Fig tree</option>
-        <option value="nectarine">Nectarine tree</option>
-        <option value="peach">Peach tree</option>
-        <option value="tomato">Tomato plant</option>
-        <option value="other-fruit">Other fruit tree</option>
-        <option value="other">Other</option>
-      </select>
-      <input type="text" id="new-custom-type" placeholder="Type of plant (e.g. Blueberry bush)" style="margin-top:8px;display:none;" />
-    </div>
-    <div class="form-row"><label class="form-label">Planting</label>
-      <select id="new-container">
-        <option value="in-ground">In-ground</option>
-        <option value="raised bed">Raised bed</option>
-        <option value="5-gal pot">5-gallon pot</option>
-        <option value="10-gal pot">10-gallon pot</option>
-        <option value="15-gal pot" selected>15-gallon pot</option>
-        <option value="25-gal pot">25-gallon pot</option>
-        <option value="half barrel (30+ gal)">Half barrel (30+ gal)</option>
-        <option value="grow bag">Grow bag</option>
-      </select>
-    </div>
-    <div class="form-row"><label class="form-label">Notes (optional)</label><input type="text" id="new-notes" placeholder="e.g. south-facing, planted spring 2024" /></div>
-    <div class="btn-row">
-      <button class="btn btn-primary" style="font-size:14px;padding:10px 20px;" id="modal-save-btn" onclick="savePlant()">Add plant</button>
-      <button class="btn" onclick="closeAddModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://apis.google.com/js/api.js" onerror="showAuthError('Failed to load Google scripts. Disable ad blockers and try again.')"></script>
-<script src="https://accounts.google.com/gsi/client" onerror="showAuthError('Failed to load Google scripts. Disable ad blockers and try again.')"></script>
+<script src="https://accounts.google.com/gsi/client" onerror="showAuthError('Failed to load Google sign-in script. Disable ad blockers and try again.')"></script>
 <script>
+// ── Config ──────────────────────────────────────────────────
 const CLIENT_ID   = '41312717840-0a5t2as30m8843nt43avco3jml6km46o.apps.googleusercontent.com';
-const SCOPE       = 'https://www.googleapis.com/auth/drive.file';
-const FOLDER_NAME = 'Garden Tracker';
-const DATA_FILE   = 'garden_data.json';
-const DOC_NAME    = 'Garden Update';
+const SCOPE       = 'https://www.googleapis.com/auth/drive';
+const APP_VERSION = 'v2-2026-05-13';
 
-const typeEmoji = {citrus:'🍋',apple:'🍎',peach:'🍑',nectarine:'🍑',apricot:'🍑',fig:'🟣',avocado:'🥑',tomato:'🍅','other-fruit':'🌳',other:'🌿'};
-const typeLabel  = {citrus:'Citrus tree',apple:'Apple tree',peach:'Peach tree',nectarine:'Nectarine tree',apricot:'Apricot tree',fig:'Fig tree',avocado:'Avocado tree',tomato:'Tomato plant','other-fruit':'Fruit tree',other:'Plant'};
+// Hardcoded — folders are pre-existing and managed outside the app
+const GARDEN_TRACKER_V2_FOLDER_ID = '1S1vzFEoe-E26bj8kHo1M1SZvFJJt7zki';
+const GARDEN_PHOTOS_FOLDER_ID     = '1_f3Y5ELidyvzwjidUR99KT2LtrHrtzJQ';
+// (Plant History folder ID intentionally NOT referenced — owned by read-side skill)
 
-let state = { plants: [] };
-let driveFileId = null, driveFolderId = null;
+// ── Plants — single source of truth, order matters ──────────
+const PLANTS = [
+  { slug: 'nectarine',       name: 'Nectarine',                typeLine: 'Stone fruit · 15-gal pot' },
+  { slug: 'apricot',         name: 'Apricot',                  typeLine: 'Stone fruit · 15-gal pot' },
+  { slug: 'dwarf-peach',     name: 'Dwarf Peach (Honey Babe)', typeLine: 'Stone fruit · 15-gal pot' },
+  { slug: 'in-ground-peach', name: 'In-Ground Peach',          typeLine: 'Stone fruit · in-ground' },
+  { slug: 'apple',           name: 'Apple (Fuji)',             typeLine: 'Pome · 15-gal pot' },
+  { slug: 'tomatoes',        name: 'Tomatoes',                 typeLine: 'Vegetable · 15-gal pot' }
+];
+
+// ── State ───────────────────────────────────────────────────
 let tokenClient = null, accessToken = null;
-let updateSession = { photos: {}, currentIdx: 0 };
+let updateSession = { date: null, photos: {}, notes: {}, currentIdx: 0 };
 
-// Cache for plant photo folder IDs (cleared on sign-out)
-let gardenPhotosFolderId = null;
-let plantFolderCache = {};
-
-function slugify(name) {
-  return name.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-function todayLocalDateSlug() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-async function ensureFolder(name, parentId) {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${name.replace(/'/g, "\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`,
-    fields: 'files(id)'
-  });
-  if (res.result.files && res.result.files.length > 0) {
-    return res.result.files[0].id;
-  }
-  const created = await gapi.client.drive.files.create({
-    resource: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
-    fields: 'id'
-  });
-  return created.result.id;
-}
-
-async function fileExistsInFolder(name, parentId) {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${name.replace(/'/g, "\\'")}' and '${parentId}' in parents and trashed=false`,
-    fields: 'files(id)'
-  });
-  return !!(res.result.files && res.result.files.length > 0);
-}
-
-// ── Persistent auth helpers ────────────────────────────────
+// ── Auth storage ────────────────────────────────────────────
 function saveAuth(token, expiresIn) {
-  const expiry = Date.now() + (expiresIn * 1000) - 60000; // 1 min buffer
+  const expiry = Date.now() + (expiresIn * 1000) - 60000;
   localStorage.setItem('gt_token', token);
   localStorage.setItem('gt_token_expiry', expiry.toString());
   localStorage.setItem('gt_authed_before', 'true');
@@ -300,13 +219,34 @@ function clearAuth() {
   localStorage.removeItem('gt_token_expiry');
 }
 
-// ── Screen management ──────────────────────────────────────
+// Invalidate cached token when scope/version changes
+if (localStorage.getItem('gt_app_version') !== APP_VERSION) {
+  clearAuth();
+  localStorage.removeItem('gt_authed_before');
+  localStorage.setItem('gt_app_version', APP_VERSION);
+}
+
+// ── Small helpers ───────────────────────────────────────────
+function todayPacific() {
+  // en-CA gives YYYY-MM-DD
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+}
+
+function getExtension(file) {
+  const mimeMap = {
+    'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp',
+    'image/heic':'heic', 'image/heif':'heif', 'image/gif':'gif'
+  };
+  if (file.type && mimeMap[file.type]) return mimeMap[file.type];
+  const m = (file.name || '').match(/\.([a-z0-9]+)$/i);
+  return m ? m[1].toLowerCase() : 'jpg';
+}
+
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
 }
 
-// ── Status bar ─────────────────────────────────────────────
 function setStatus(type, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot' + (type === 'saving' ? ' saving' : type === 'error' ? ' error' : '');
@@ -315,151 +255,118 @@ function setStatus(type, text) {
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
+  if (!el) return;
   el.textContent = msg;
   el.style.display = 'block';
 }
 
-// ── Auth ───────────────────────────────────────────────────
-async function gapiReady() {
-  return new Promise(resolve => {
-    gapi.load('client', async () => {
-      await gapi.client.init({});
-      await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
-      await gapi.client.load('https://docs.googleapis.com/$discovery/rest?version=v1');
-      resolve();
-    });
-  });
-}
-
+// ── Auth ────────────────────────────────────────────────────
 async function signIn() {
-  if (typeof google === 'undefined' || typeof gapi === 'undefined') {
-    showAuthError('Google scripts failed to load. Disable any ad blockers and try again.');
+  if (typeof google === 'undefined') {
+    showAuthError('Google sign-in script failed to load. Disable any ad blockers and try again.');
     return;
   }
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: SCOPE,
-    callback: async resp => {
+    callback: resp => {
       if (resp.error) { showAuthError('Sign-in error: ' + resp.error); return; }
       accessToken = resp.access_token;
       saveAuth(resp.access_token, resp.expires_in || 3600);
-      await gapiReady();
-      gapi.client.setToken({ access_token: accessToken });
-      await ensureDriveFolder();
-      await loadGardenData();
-      renderPlants();
-      showScreen('home');
+      onSignedIn();
     }
   });
   tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function signOut() {
-  if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
+  if (accessToken && typeof google !== 'undefined') {
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
   clearAuth();
   localStorage.removeItem('gt_authed_before');
-  accessToken = null; driveFileId = null; driveFolderId = null;
-  gardenPhotosFolderId = null; plantFolderCache = {};
-  state = { plants: [] };
+  accessToken = null;
   showScreen('auth');
 }
 
-// ── Drive folder ───────────────────────────────────────────
-async function ensureDriveFolder() {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    fields: 'files(id)'
+function onSignedIn() {
+  setStatus('ok', 'Connected to Google Drive');
+  initHomeScreen();
+  showScreen('home');
+}
+
+async function tryAutoLogin() {
+  let tries = 0;
+  while (typeof google === 'undefined' && tries < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    tries++;
+  }
+  if (typeof google === 'undefined') return;
+
+  const stored = getStoredToken();
+  if (stored) {
+    accessToken = stored;
+    onSignedIn();
+    return;
+  }
+  if (localStorage.getItem('gt_authed_before') === 'true') {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPE,
+      callback: resp => {
+        if (resp.error) return; // user will need to click sign-in
+        accessToken = resp.access_token;
+        saveAuth(resp.access_token, resp.expires_in || 3600);
+        onSignedIn();
+      }
+    });
+    client.requestAccessToken({ prompt: '' });
+  }
+}
+window.addEventListener('load', tryAutoLogin);
+
+// ── Drive: upload a photo into Garden Photos (resumable, no re-encode) ──
+async function uploadPhotoToGarden(file, filename) {
+  const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': file.type || 'application/octet-stream',
+      'X-Upload-Content-Length': file.size.toString()
+    },
+    body: JSON.stringify({ name: filename, parents: [GARDEN_PHOTOS_FOLDER_ID] })
   });
-  if (res.result.files && res.result.files.length > 0) {
-    driveFolderId = res.result.files[0].id;
-  } else {
-    const folder = await gapi.client.drive.files.create({
-      resource: { name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' },
-      fields: 'id'
-    });
-    driveFolderId = folder.result.id;
-  }
+  if (!initRes.ok) throw new Error('Init upload failed: ' + await initRes.text());
+  const uploadUrl = initRes.headers.get('Location');
+  if (!uploadUrl) throw new Error('No upload URL returned by Drive');
+
+  const putRes = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
+  });
+  if (!putRes.ok) throw new Error('Upload failed: ' + await putRes.text());
+  return putRes.json();
 }
 
-// ── Garden data (plant registry) ───────────────────────────
-async function loadGardenData() {
-  setStatus('saving', 'Loading…');
-  try {
-    const res = await gapi.client.drive.files.list({
-      q: `name='${DATA_FILE}' and '${driveFolderId}' in parents and trashed=false`,
-      fields: 'files(id)'
-    });
-    if (res.result.files && res.result.files.length > 0) {
-      driveFileId = res.result.files[0].id;
-      const file = await gapi.client.drive.files.get({ fileId: driveFileId, alt: 'media' });
-      const loaded = typeof file.result === 'string' ? JSON.parse(file.result) : file.result;
-      if (loaded && loaded.plants) state = loaded;
-    }
-    setStatus('ok', 'Connected to Google Drive');
-  } catch(e) {
-    setStatus('error', 'Could not load data');
-  }
-}
-
-async function saveGardenData() {
-  const body = JSON.stringify(state, null, 2);
-  if (driveFileId) {
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body
-    });
-  } else {
-    const meta = await gapi.client.drive.files.create({
-      resource: { name: DATA_FILE, mimeType: 'application/json', parents: [driveFolderId] },
-      fields: 'id'
-    });
-    driveFileId = meta.result.id;
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body
-    });
-  }
-}
-
-// ── Upload a plant photo to Garden Photos/<slug>/<YYYY-MM-DD>.jpg
-async function uploadPlantPhoto(base64Data, plantName) {
-  // 1. Resolve Garden Photos folder (cached)
-  if (!gardenPhotosFolderId) {
-    gardenPhotosFolderId = await ensureFolder('Garden Photos', driveFolderId);
-  }
-  // 2. Resolve plant subfolder (cached)
-  const slug = slugify(plantName);
-  if (!plantFolderCache[slug]) {
-    plantFolderCache[slug] = await ensureFolder(slug, gardenPhotosFolderId);
-  }
-  const plantFolderId = plantFolderCache[slug];
-
-  // 3. Pick a filename, suffix on collision so existing photos are preserved
-  const dateSlug = todayLocalDateSlug();
-  let filename = `${dateSlug}.jpg`;
-  let counter = 2;
-  while (await fileExistsInFolder(filename, plantFolderId)) {
-    filename = `${dateSlug}-${counter}.jpg`;
-    counter++;
-  }
-
-  // 4. Upload as JPEG (resizeImage already normalized to image/jpeg)
-  const mimeType = 'image/jpeg';
-  const base64   = base64Data.split(',')[1];
+// ── Drive: create a NEW Garden Update doc (rolling-rewrite) ────────────
+async function createGardenUpdateDoc(text) {
   const boundary = 'gt_' + Date.now();
-  const metadata = JSON.stringify({ name: filename, parents: [plantFolderId], mimeType });
+  const metadata = JSON.stringify({
+    name: 'Garden Update',
+    parents: [GARDEN_TRACKER_V2_FOLDER_ID],
+    mimeType: 'application/vnd.google-apps.document'
+  });
   const body = [
     `--${boundary}`,
-    'Content-Type: application/json',
+    'Content-Type: application/json; charset=UTF-8',
     '',
     metadata,
     `--${boundary}`,
-    `Content-Type: ${mimeType}`,
-    'Content-Transfer-Encoding: base64',
+    'Content-Type: text/plain; charset=UTF-8',
     '',
-    base64,
+    text,
     `--${boundary}--`
   ].join('\r\n');
 
@@ -471,341 +378,115 @@ async function uploadPlantPhoto(base64Data, plantName) {
     },
     body
   });
-  const result = await res.json();
-  return { id: result.id, path: `Garden Photos/${slug}/${filename}` };
+  if (!res.ok) throw new Error('Doc create failed: ' + await res.text());
+  return res.json();
 }
 
-// ── Find or create the "Garden Update" Google Doc ─────────
-async function ensureGoogleDoc() {
-  const res = await gapi.client.drive.files.list({
-    q: `name='${DOC_NAME}' and '${driveFolderId}' in parents and mimeType='application/vnd.google-apps.document' and trashed=false`,
-    fields: 'files(id)'
-  });
-  if (res.result.files && res.result.files.length > 0) {
-    return res.result.files[0].id;
-  }
-  const create = await gapi.client.drive.files.create({
-    resource: {
-      name: DOC_NAME,
-      mimeType: 'application/vnd.google-apps.document',
-      parents: [driveFolderId]
-    },
-    fields: 'id'
-  });
-  return create.result.id;
-}
-
-// ── Append a new update to the top of the Google Doc ──────
-async function appendUpdateToDoc(updateData) {
-  const docId = await ensureGoogleDoc();
-
-  // Text-only segments; photos now live in Garden Photos/<slug>/, not the doc
-  const segments = [];
-  segments.push({ text: `Garden Update — ${updateData.date}\n`, style: 'HEADING_1' });
-  segments.push({ text: `${updateData.location}\n\n`, style: 'NORMAL_TEXT' });
-
-  for (const plant of updateData.plants) {
-    segments.push({ text: `${plant.emoji} ${plant.name}\n`, style: 'HEADING_2' });
-    segments.push({ text: `${plant.type} · ${plant.container}\n`, style: 'NORMAL_TEXT' });
-    if (plant.photoPath) {
-      segments.push({ text: `Photo: ${plant.photoPath}\n`, style: 'NORMAL_TEXT' });
-    } else {
-      segments.push({ text: '(no photo this update)\n', style: 'NORMAL_TEXT' });
-    }
-    if (plant.setup_notes) {
-      segments.push({ text: `Notes: ${plant.setup_notes}\n`, style: 'NORMAL_TEXT' });
-    }
-    segments.push({ text: '\n', style: 'NORMAL_TEXT' });
-  }
-  segments.push({ text: '\n', style: 'NORMAL_TEXT' });
-
-  // Convert to batchUpdate requests; insert at index 1 so newest is at top
-  const requests = [];
-  const styleRanges = [];
-  let idx = 1;
-
-  for (const seg of segments) {
-    requests.push({ insertText: { location: { index: idx }, text: seg.text } });
-    if (seg.style) styleRanges.push({ start: idx, end: idx + seg.text.length, style: seg.style });
-    idx += seg.text.length;
-  }
-
-  for (const r of styleRanges) {
-    requests.push({
-      updateParagraphStyle: {
-        range: { startIndex: r.start, endIndex: r.end },
-        paragraphStyle: { namedStyleType: r.style },
-        fields: 'namedStyleType'
-      }
-    });
-  }
-
-  await gapi.client.docs.documents.batchUpdate({
-    documentId: docId,
-    resource: { requests }
-  });
-
-  return docId;
-}
-
-// ── Auto-login on page load ────────────────────────────────
-async function tryAutoLogin() {
-  // Wait for Google scripts to load
-  let tries = 0;
-  while ((typeof google === 'undefined' || typeof gapi === 'undefined') && tries < 50) {
-    await new Promise(r => setTimeout(r, 100));
-    tries++;
-  }
-  if (typeof google === 'undefined' || typeof gapi === 'undefined') return;
-
-  const stored = getStoredToken();
-  if (stored) {
-    try {
-      accessToken = stored;
-      await gapiReady();
-      gapi.client.setToken({ access_token: accessToken });
-      await ensureDriveFolder();
-      await loadGardenData();
-      renderPlants();
-      showScreen('home');
-      return;
-    } catch (e) {
-      clearAuth();
-    }
-  }
-
-  // If user has authed before, try silent refresh
-  if (localStorage.getItem('gt_authed_before') === 'true') {
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPE,
-      callback: async resp => {
-        if (resp.error) return; // silent failed, user will click sign-in
-        accessToken = resp.access_token;
-        saveAuth(resp.access_token, resp.expires_in || 3600);
-        await gapiReady();
-        gapi.client.setToken({ access_token: accessToken });
-        await ensureDriveFolder();
-        await loadGardenData();
-        renderPlants();
-        showScreen('home');
-      }
-    });
-    client.requestAccessToken({ prompt: '' });
-  }
-}
-
-window.addEventListener('load', tryAutoLogin);
-
-// ── Resize image before upload (max 1200px) ───────────────
-function resizeImage(base64, maxPx = 1200) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width  = Math.round(img.width  * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
-    };
-    img.src = base64;
-  });
-}
-
-// ── Plant list ─────────────────────────────────────────────
-function renderPlants() {
+// ── Home ────────────────────────────────────────────────────
+function initHomeScreen() {
+  document.getElementById('update-date').value = todayPacific();
   const list = document.getElementById('plant-list');
-  if (!state.plants || state.plants.length === 0) {
-    list.innerHTML = '<div class="empty-state"><i class="ti ti-plant-2"></i><p>No plants yet. Add your first plant above.</p></div>';
-    return;
-  }
-  list.innerHTML = state.plants.map(p => `
+  list.innerHTML = PLANTS.map(p => `
     <div class="plant-row">
-      <div class="plant-row-emoji">${typeEmoji[p.type] || '🌿'}</div>
       <div class="plant-row-info">
         <div class="plant-row-name">${p.name}</div>
-        <div class="plant-row-meta">${getTypeLabel(p)} &middot; ${p.container}</div>
+        <div class="plant-row-meta">${p.typeLine}</div>
       </div>
-      <button class="btn-icon" onclick="editPlant('${p.id}')" title="Edit">
-        <i class="ti ti-pencil" style="font-size:16px;color:var(--text3);"></i>
-      </button>
-      <button class="btn-icon" onclick="deletePlant('${p.id}')" title="Remove">
-        <i class="ti ti-trash" style="font-size:16px;color:var(--text3);"></i>
-      </button>
     </div>
   `).join('');
 }
 
-// ── Add / edit / delete plants ─────────────────────────────
-let editingPlantId = null;
-
-function onTypeChange() {
-  const isOther = document.getElementById('new-type').value === 'other';
-  document.getElementById('new-custom-type').style.display = isOther ? 'block' : 'none';
-}
-
-function getTypeLabel(p) {
-  if (p.type === 'other' && p.customType) return p.customType;
-  return typeLabel[p.type] || p.type;
-}
-
-function openAddModal() {
-  editingPlantId = null;
-  document.getElementById('modal-title').textContent = 'Add a plant';
-  document.getElementById('modal-save-btn').textContent = 'Add plant';
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-type').value = 'apple';
-  document.getElementById('new-custom-type').value = '';
-  document.getElementById('new-container').value = '15-gal pot';
-  document.getElementById('new-notes').value = '';
-  onTypeChange();
-  document.getElementById('add-modal').classList.add('open');
-}
-
-function editPlant(id) {
-  const plant = state.plants.find(p => p.id === id);
-  if (!plant) return;
-  editingPlantId = id;
-  document.getElementById('modal-title').textContent = 'Edit plant';
-  document.getElementById('modal-save-btn').textContent = 'Save changes';
-  document.getElementById('new-name').value = plant.name;
-  document.getElementById('new-type').value = plant.type;
-  document.getElementById('new-custom-type').value = plant.customType || '';
-  document.getElementById('new-container').value = plant.container;
-  document.getElementById('new-notes').value = plant.notes || '';
-  onTypeChange();
-  document.getElementById('add-modal').classList.add('open');
-}
-
-function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
-document.getElementById('add-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('add-modal')) closeAddModal();
-});
-
-function savePlant() {
-  const name = document.getElementById('new-name').value.trim();
-  if (!name) { alert('Please enter a plant name.'); return; }
-  const type = document.getElementById('new-type').value;
-  const customType = document.getElementById('new-custom-type').value.trim();
-  if (type === 'other' && !customType) {
-    alert('Please describe the type of plant.');
-    return;
-  }
-  if (editingPlantId) {
-    const plant = state.plants.find(p => p.id === editingPlantId);
-    if (plant) {
-      plant.name       = name;
-      plant.type       = type;
-      plant.customType = type === 'other' ? customType : '';
-      plant.container  = document.getElementById('new-container').value;
-      plant.notes      = document.getElementById('new-notes').value.trim();
-    }
-  } else {
-    state.plants.push({
-      id: Date.now().toString(),
-      name,
-      type,
-      customType: type === 'other' ? customType : '',
-      container: document.getElementById('new-container').value,
-      notes:     document.getElementById('new-notes').value.trim()
-    });
-  }
-  saveGardenData();
-  renderPlants();
-  closeAddModal();
-}
-
-async function deletePlant(id) {
-  if (!confirm('Remove this plant?')) return;
-  state.plants = state.plants.filter(p => p.id !== id);
-  await saveGardenData();
-  renderPlants();
-}
-
-// ── Update flow ────────────────────────────────────────────
+// ── Update flow ─────────────────────────────────────────────
 function startUpdate() {
-  if (!state.plants || state.plants.length === 0) {
-    alert('Add at least one plant first.');
-    return;
-  }
-  updateSession = { photos: {}, currentIdx: 0 };
+  const date = document.getElementById('update-date').value || todayPacific();
+  updateSession = { date, photos: {}, notes: {}, currentIdx: 0 };
   renderUpdateStep();
   showScreen('update');
 }
 
 function cancelUpdate() {
-  updateSession = { photos: {}, currentIdx: 0 };
+  // Release preview URLs
+  for (const slug in updateSession.photos) {
+    if (updateSession.photos[slug].previewUrl) URL.revokeObjectURL(updateSession.photos[slug].previewUrl);
+  }
+  updateSession = { date: null, photos: {}, notes: {}, currentIdx: 0 };
   showScreen('home');
 }
 
 function renderUpdateStep() {
-  const plant = state.plants[updateSession.currentIdx];
-  const total = state.plants.length;
+  const plant = PLANTS[updateSession.currentIdx];
+  const total = PLANTS.length;
   const idx   = updateSession.currentIdx;
   const isLast = idx === total - 1;
 
   document.getElementById('update-progress-label').textContent = `Plant ${idx + 1} of ${total}`;
-  document.getElementById('update-emoji').textContent     = typeEmoji[plant.type] || '🌿';
   document.getElementById('update-plant-name').textContent = plant.name;
-  document.getElementById('update-plant-meta').textContent = `${getTypeLabel(plant)} · ${plant.container}`;
+  document.getElementById('update-plant-meta').textContent = plant.typeLine;
   document.getElementById('next-btn').textContent = isLast ? '✓  Submit update' : 'Next plant →';
-
-  // Show "Save photos to my phone" only on last plant when at least one photo has been captured
-  const hasPhotos = Object.keys(updateSession.photos).length > 0;
-  document.getElementById('save-photos-btn').classList.toggle('hidden', !(isLast && hasPhotos));
+  document.getElementById('plant-notes').value = updateSession.notes[plant.slug] || '';
 
   const zone = document.getElementById('photo-zone');
-  const photo = updateSession.photos[plant.id];
-  if (photo) {
-    zone.innerHTML = `<img src="${photo}" alt="Plant photo" /><span class="photo-retake">Retake</span>`;
+  const entry = updateSession.photos[plant.slug];
+  if (entry) {
+    zone.innerHTML = `<img src="${entry.previewUrl}" alt="Plant photo" /><span class="photo-retake">Retake</span>`;
   } else {
     zone.innerHTML = `<i class="ti ti-camera"></i><span class="photo-zone-hint">Tap to take or upload photo</span>`;
   }
+
+  const hasPhotos = Object.keys(updateSession.photos).length > 0;
+  document.getElementById('save-photos-btn').classList.toggle('hidden', !(isLast && hasPhotos));
 }
 
 function handlePhotoCapture(input) {
   const file = input.files[0];
   if (!file) return;
-  const plant = state.plants[updateSession.currentIdx];
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const resized = await resizeImage(e.target.result);
-    updateSession.photos[plant.id] = resized;
-    const zone = document.getElementById('photo-zone');
-    zone.innerHTML = `<img src="${resized}" alt="Plant photo" /><span class="photo-retake">Retake</span>`;
-  };
-  reader.readAsDataURL(file);
+  const plant = PLANTS[updateSession.currentIdx];
+  // Release previous preview, if any
+  if (updateSession.photos[plant.slug]) {
+    URL.revokeObjectURL(updateSession.photos[plant.slug].previewUrl);
+  }
+  const previewUrl = URL.createObjectURL(file);
+  updateSession.photos[plant.slug] = { file, previewUrl };
+  const zone = document.getElementById('photo-zone');
+  zone.innerHTML = `<img src="${previewUrl}" alt="Plant photo" /><span class="photo-retake">Retake</span>`;
   input.value = '';
 }
 
-function skipPlant() { advanceOrSubmit(); }
-function nextPlant()  { advanceOrSubmit(); }
+function captureNotes() {
+  const plant = PLANTS[updateSession.currentIdx];
+  const val = document.getElementById('plant-notes').value;
+  if (val.trim()) updateSession.notes[plant.slug] = val.trim();
+  else delete updateSession.notes[plant.slug];
+}
+
+function skipPlant() { captureNotes(); advanceOrSubmit(); }
+function nextPlant() { captureNotes(); advanceOrSubmit(); }
+
+function advanceOrSubmit() {
+  const isLast = updateSession.currentIdx === PLANTS.length - 1;
+  if (isLast) {
+    submitUpdate();
+  } else {
+    updateSession.currentIdx++;
+    renderUpdateStep();
+  }
+}
 
 async function savePhotosToPhone() {
-  const dateSlug = todayLocalDateSlug();
+  captureNotes();
+  const dateSlug = updateSession.date || todayPacific();
   const files = [];
-  for (const plant of state.plants) {
-    const photo = updateSession.photos[plant.id];
-    if (!photo) continue;
-    const blob = await (await fetch(photo)).blob();
-    const filename = `${slugify(plant.name)}_${dateSlug}.jpg`;
-    files.push(new File([blob], filename, { type: 'image/jpeg' }));
+  for (const plant of PLANTS) {
+    const entry = updateSession.photos[plant.slug];
+    if (!entry) continue;
+    const ext = getExtension(entry.file);
+    files.push(new File([entry.file], `${dateSlug}_${plant.slug}.${ext}`, { type: entry.file.type }));
   }
-  if (files.length === 0) {
-    alert('No photos to save yet — take a photo first.');
-    return;
-  }
-  // iOS Safari: native share sheet → "Save N Images" goes to Photos
+  if (files.length === 0) { alert('No photos to save yet — take a photo first.'); return; }
   if (navigator.canShare && navigator.canShare({ files })) {
-    try {
-      await navigator.share({ files });
-    } catch (e) {
-      // user canceled — no-op
-    }
+    try { await navigator.share({ files }); } catch (e) { /* canceled */ }
     return;
   }
-  // Fallback: trigger a download for each
   for (const file of files) {
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
@@ -817,57 +498,49 @@ async function savePhotosToPhone() {
   }
 }
 
-function advanceOrSubmit() {
-  const isLast = updateSession.currentIdx === state.plants.length - 1;
-  if (isLast) {
-    submitUpdate();
-  } else {
-    updateSession.currentIdx++;
-    renderUpdateStep();
+// ── Build doc text per spec (plain text, all 6 plants, blank Notes lines OK) ──
+function buildDocText() {
+  const lines = [];
+  lines.push(`Garden Update — ${updateSession.date}`);
+  for (const plant of PLANTS) {
+    lines.push(plant.name);
+    lines.push(plant.typeLine);
+    lines.push(`Notes: ${updateSession.notes[plant.slug] || ''}`);
   }
+  return lines.join('\n');
 }
 
+// ── Submit ──────────────────────────────────────────────────
 async function submitUpdate() {
   showScreen('saving');
   const savingStatus = document.getElementById('saving-status');
-  const dateStr  = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-  const updateData = {
-    date: dateStr,
-    location: 'Atascadero, CA',
-    plants: []
-  };
-
-  const photosEntries = Object.entries(updateSession.photos);
-  let uploaded = 0;
+  const dateSlug = updateSession.date;
 
   try {
-    for (const plant of state.plants) {
-      const photo = updateSession.photos[plant.id];
-      let photoPath = null;
+    // Upload photos (fixed PLANTS order)
+    const photoEntries = PLANTS
+      .map(p => ({ plant: p, entry: updateSession.photos[p.slug] }))
+      .filter(x => x.entry);
 
-      if (photo) {
-        uploaded++;
-        savingStatus.textContent = `Uploading photo ${uploaded} of ${photosEntries.length}…`;
-        const uploaded_result = await uploadPlantPhoto(photo, plant.name);
-        photoPath = uploaded_result.path;
-      }
-
-      updateData.plants.push({
-        name: plant.name,
-        emoji: typeEmoji[plant.type] || '🌿',
-        type: getTypeLabel(plant),
-        container: plant.container,
-        setup_notes: plant.notes || null,
-        photoPath
-      });
+    let i = 0;
+    for (const { plant, entry } of photoEntries) {
+      i++;
+      savingStatus.textContent = `Uploading photo ${i} of ${photoEntries.length}…`;
+      const ext = getExtension(entry.file);
+      await uploadPhotoToGarden(entry.file, `${dateSlug}_${plant.slug}.${ext}`);
     }
 
-    savingStatus.textContent = 'Updating Garden Update doc…';
-    await appendUpdateToDoc(updateData);
+    // Always create a fresh Garden Update doc — rolling-rewrite
+    savingStatus.textContent = 'Creating Garden Update doc…';
+    await createGardenUpdateDoc(buildDocText());
+
+    // Release preview URLs
+    for (const slug in updateSession.photos) {
+      URL.revokeObjectURL(updateSession.photos[slug].previewUrl);
+    }
     showScreen('success');
   } catch (e) {
-    alert('Save failed: ' + (e.result?.error?.message || e.message || 'error'));
+    alert('Save failed: ' + (e.message || 'error'));
     showScreen('home');
   }
 }
