@@ -239,6 +239,9 @@ const DEFAULT_PLANTS = [
   { slug: 'tomatoes',        name: 'Tomatoes',                 typeLine: 'Vegetable · 15-gal pot' }
 ];
 
+const PLANTS_FILE = 'plants.json';
+let plantsFileId = null;
+
 function loadPlants() {
   try {
     const stored = localStorage.getItem('gt_plants');
@@ -249,8 +252,85 @@ function loadPlants() {
   } catch (e) { /* fall through */ }
   return DEFAULT_PLANTS.map(p => ({ ...p }));
 }
-function savePlants() {
+function savePlantsCache() {
   localStorage.setItem('gt_plants', JSON.stringify(PLANTS));
+}
+
+// Pull plants.json from Drive; returns array or null if not found
+async function loadPlantsFromDrive() {
+  const params = new URLSearchParams({
+    q: `name='${PLANTS_FILE}' and '${GARDEN_TRACKER_V2_FOLDER_ID}' in parents and trashed=false`,
+    fields: 'files(id)'
+  });
+  const listRes = await fetch(`https://www.googleapis.com/drive/v3/files?${params}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  if (!listRes.ok) throw new Error('List plants.json failed: ' + await listRes.text());
+  const listData = await listRes.json();
+  if (!listData.files || listData.files.length === 0) return null;
+  plantsFileId = listData.files[0].id;
+  const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${plantsFileId}?alt=media`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  if (!fileRes.ok) throw new Error('Read plants.json failed: ' + await fileRes.text());
+  const parsed = await fileRes.json();
+  return Array.isArray(parsed) ? parsed : null;
+}
+
+// Push PLANTS to Drive (PATCH if file exists, POST if not)
+async function savePlantsToDrive() {
+  const body = JSON.stringify(PLANTS, null, 2);
+  if (plantsFileId) {
+    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${plantsFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body
+    });
+    if (!res.ok) throw new Error('Update plants.json failed: ' + await res.text());
+    return;
+  }
+  const boundary = 'gt_' + Date.now();
+  const metadata = JSON.stringify({
+    name: PLANTS_FILE,
+    parents: [GARDEN_TRACKER_V2_FOLDER_ID],
+    mimeType: 'application/json'
+  });
+  const multi = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    metadata,
+    `--${boundary}`,
+    'Content-Type: application/json',
+    '',
+    body,
+    `--${boundary}--`
+  ].join('\r\n');
+  const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body: multi
+  });
+  if (!createRes.ok) throw new Error('Create plants.json failed: ' + await createRes.text());
+  const data = await createRes.json();
+  plantsFileId = data.id;
+}
+
+// Atomic-ish commit: update cache, push to Drive, show error if Drive fails
+async function commitPlants() {
+  savePlantsCache();
+  renderPlantList();
+  try {
+    setStatus('saving', 'Syncing plants…');
+    await savePlantsToDrive();
+    setStatus('ok', 'Plants synced to Drive');
+  } catch (e) {
+    setStatus('error', 'Drive sync failed');
+    alert('Plant list saved on this device but failed to sync to Drive: ' + e.message);
+  }
 }
 function slugify(name) {
   return name.toLowerCase()
@@ -357,6 +437,29 @@ function onSignedIn() {
   setStatus('ok', 'Connected to Google Drive');
   initHomeScreen();
   showScreen('home');
+  syncPlantsFromDrive();
+}
+
+async function syncPlantsFromDrive() {
+  try {
+    setStatus('saving', 'Syncing plants…');
+    const drivePlants = await loadPlantsFromDrive();
+    if (drivePlants) {
+      // Drive has plants.json — it wins
+      if (JSON.stringify(drivePlants) !== JSON.stringify(PLANTS)) {
+        PLANTS = drivePlants;
+        savePlantsCache();
+        renderPlantList();
+      }
+    } else {
+      // No plants.json on Drive yet — seed it from local
+      await savePlantsToDrive();
+    }
+    setStatus('ok', 'Connected to Google Drive');
+  } catch (e) {
+    setStatus('error', 'Plant sync failed');
+    console.warn('Plant sync error:', e);
+  }
 }
 
 async function tryAutoLogin() {
@@ -542,9 +645,8 @@ function savePlantEdit() {
     }
     PLANTS.push({ slug, name, typeLine });
   }
-  savePlants();
-  renderPlantList();
   closePlantModal();
+  commitPlants();
 }
 
 function deletePlant(slug) {
@@ -552,8 +654,7 @@ function deletePlant(slug) {
   if (!plant) return;
   if (!confirm(`Remove "${plant.name}" from the plant list?`)) return;
   PLANTS = PLANTS.filter(p => p.slug !== slug);
-  savePlants();
-  renderPlantList();
+  commitPlants();
 }
 
 // ── Update flow ─────────────────────────────────────────────
