@@ -90,6 +90,22 @@
   .update-actions { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
   .btn-skip { font-family: Helvetica Neue, Arial, sans-serif; font-size: 14px; color: var(--text2); background: transparent; border: none; cursor: pointer; padding: 8px; text-align: center; }
 
+  /* Add-plant inline button */
+  .add-plant-row { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 0.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 0.85rem; cursor: pointer; font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; }
+  .add-plant-row:hover { background: var(--surface); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 1.5rem; width: 100%; max-width: 500px; border-top: 0.5px solid var(--border-md); }
+  .modal h2 { font-size: 18px; font-weight: 400; margin-bottom: 1.25rem; }
+  .form-row { margin-bottom: 12px; }
+  .form-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-bottom: 5px; display: block; letter-spacing: 0.05em; text-transform: uppercase; }
+  input[type="text"] { width: 100%; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; }
+  input[type="text"]:focus { border-color: var(--accent); }
+  .btn-row { display: flex; gap: 8px; margin-top: 1.25rem; }
+  .form-help { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.4; }
+
   /* Saving / Success */
   .center-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 1.5rem; padding: 2rem; text-align: center; }
   .center-wrap h2 { font-size: 24px; font-weight: 400; }
@@ -176,6 +192,31 @@
   </div>
 </div>
 
+<!-- Add / Edit Plant Modal -->
+<div class="modal-overlay" id="plant-modal">
+  <div class="modal">
+    <h2 id="modal-title">Add a plant</h2>
+    <div class="form-row">
+      <label class="form-label">Display name</label>
+      <input type="text" id="plant-edit-name" placeholder="e.g. Meyer Lemon" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Type line</label>
+      <input type="text" id="plant-edit-typeline" placeholder="e.g. Citrus · 15-gal pot" />
+      <div class="form-help">Shown in the Garden Update doc. Use a middle dot (·) between type and container.</div>
+    </div>
+    <div class="form-row" id="slug-preview-row" style="display:none;">
+      <label class="form-label">Folder slug (auto)</label>
+      <input type="text" id="plant-edit-slug" disabled />
+      <div class="form-help">Photos saved as &lt;date&gt;_&lt;slug&gt;.jpg. Claude's skill must recognize this slug.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" style="font-size:14px;padding:10px 20px;margin-top:0;" id="modal-save-btn" onclick="savePlantEdit()">Add plant</button>
+      <button class="btn" onclick="closePlantModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://accounts.google.com/gsi/client" onerror="showAuthError('Failed to load Google sign-in script. Disable ad blockers and try again.')"></script>
 <script>
 // ── Config ──────────────────────────────────────────────────
@@ -188,8 +229,8 @@ const GARDEN_TRACKER_V2_FOLDER_ID = '1S1vzFEoe-E26bj8kHo1M1SZvFJJt7zki';
 const GARDEN_PHOTOS_FOLDER_ID     = '1_f3Y5ELidyvzwjidUR99KT2LtrHrtzJQ';
 // (Plant History folder ID intentionally NOT referenced — owned by read-side skill)
 
-// ── Plants — single source of truth, order matters ──────────
-const PLANTS = [
+// ── Plants — order matters; persisted to localStorage ──────
+const DEFAULT_PLANTS = [
   { slug: 'nectarine',       name: 'Nectarine',                typeLine: 'Stone fruit · 15-gal pot' },
   { slug: 'apricot',         name: 'Apricot',                  typeLine: 'Stone fruit · 15-gal pot' },
   { slug: 'dwarf-peach',     name: 'Dwarf Peach (Honey Babe)', typeLine: 'Stone fruit · 15-gal pot' },
@@ -197,6 +238,29 @@ const PLANTS = [
   { slug: 'apple',           name: 'Apple (Fuji)',             typeLine: 'Pome · 15-gal pot' },
   { slug: 'tomatoes',        name: 'Tomatoes',                 typeLine: 'Vegetable · 15-gal pot' }
 ];
+
+function loadPlants() {
+  try {
+    const stored = localStorage.getItem('gt_plants');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) { /* fall through */ }
+  return DEFAULT_PLANTS.map(p => ({ ...p }));
+}
+function savePlants() {
+  localStorage.setItem('gt_plants', JSON.stringify(PLANTS));
+}
+function slugify(name) {
+  return name.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+let PLANTS = loadPlants();
 
 // ── State ───────────────────────────────────────────────────
 let tokenClient = null, accessToken = null;
@@ -385,15 +449,111 @@ async function createGardenUpdateDoc(text) {
 // ── Home ────────────────────────────────────────────────────
 function initHomeScreen() {
   document.getElementById('update-date').value = todayPacific();
+  renderPlantList();
+}
+
+function renderPlantList() {
   const list = document.getElementById('plant-list');
   list.innerHTML = PLANTS.map(p => `
     <div class="plant-row">
       <div class="plant-row-info">
-        <div class="plant-row-name">${p.name}</div>
-        <div class="plant-row-meta">${p.typeLine}</div>
+        <div class="plant-row-name">${escapeHtml(p.name)}</div>
+        <div class="plant-row-meta">${escapeHtml(p.typeLine)}</div>
       </div>
+      <button class="btn-icon" onclick="editPlant('${p.slug}')" title="Edit">
+        <i class="ti ti-pencil" style="font-size:16px;color:var(--text3);"></i>
+      </button>
+      <button class="btn-icon" onclick="deletePlant('${p.slug}')" title="Remove">
+        <i class="ti ti-trash" style="font-size:16px;color:var(--text3);"></i>
+      </button>
     </div>
-  `).join('');
+  `).join('') + `
+    <div class="add-plant-row" onclick="openAddPlantModal()">
+      <i class="ti ti-plus"></i><span>Add plant</span>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Plant add/edit/delete ──────────────────────────────────
+let editingSlug = null;
+
+function openAddPlantModal() {
+  editingSlug = null;
+  document.getElementById('modal-title').textContent = 'Add a plant';
+  document.getElementById('modal-save-btn').textContent = 'Add plant';
+  document.getElementById('plant-edit-name').value = '';
+  document.getElementById('plant-edit-typeline').value = '';
+  document.getElementById('plant-edit-slug').value = '';
+  document.getElementById('slug-preview-row').style.display = 'block';
+  document.getElementById('plant-modal').classList.add('open');
+  // Live-update slug preview from the name
+  const nameInput = document.getElementById('plant-edit-name');
+  nameInput.oninput = () => {
+    document.getElementById('plant-edit-slug').value = slugify(nameInput.value);
+  };
+}
+
+function editPlant(slug) {
+  const plant = PLANTS.find(p => p.slug === slug);
+  if (!plant) return;
+  editingSlug = slug;
+  document.getElementById('modal-title').textContent = 'Edit plant';
+  document.getElementById('modal-save-btn').textContent = 'Save changes';
+  document.getElementById('plant-edit-name').value = plant.name;
+  document.getElementById('plant-edit-typeline').value = plant.typeLine;
+  document.getElementById('plant-edit-slug').value = plant.slug;
+  document.getElementById('slug-preview-row').style.display = 'block';
+  document.getElementById('plant-modal').classList.add('open');
+  // For existing plants, slug stays fixed regardless of name edits
+  document.getElementById('plant-edit-name').oninput = null;
+}
+
+function closePlantModal() {
+  document.getElementById('plant-modal').classList.remove('open');
+}
+
+document.getElementById('plant-modal').addEventListener('click', e => {
+  if (e.target.id === 'plant-modal') closePlantModal();
+});
+
+function savePlantEdit() {
+  const name = document.getElementById('plant-edit-name').value.trim();
+  const typeLine = document.getElementById('plant-edit-typeline').value.trim();
+  if (!name) { alert('Please enter a display name.'); return; }
+  if (!typeLine) { alert('Please enter a type line.'); return; }
+
+  if (editingSlug) {
+    const plant = PLANTS.find(p => p.slug === editingSlug);
+    if (plant) {
+      plant.name = name;
+      plant.typeLine = typeLine;
+      // slug intentionally NOT changed — read-side skill references it
+    }
+  } else {
+    const slug = slugify(name);
+    if (!slug) { alert('Could not build a slug from that name.'); return; }
+    if (PLANTS.some(p => p.slug === slug)) {
+      alert(`A plant with slug "${slug}" already exists. Pick a different name.`);
+      return;
+    }
+    PLANTS.push({ slug, name, typeLine });
+  }
+  savePlants();
+  renderPlantList();
+  closePlantModal();
+}
+
+function deletePlant(slug) {
+  const plant = PLANTS.find(p => p.slug === slug);
+  if (!plant) return;
+  if (!confirm(`Remove "${plant.name}" from the plant list?`)) return;
+  PLANTS = PLANTS.filter(p => p.slug !== slug);
+  savePlants();
+  renderPlantList();
 }
 
 // ── Update flow ─────────────────────────────────────────────
