@@ -94,15 +94,16 @@
   .add-plant-row { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface2); border: 0.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 0.85rem; cursor: pointer; font-family: Helvetica Neue, Arial, sans-serif; font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; }
   .add-plant-row:hover { background: var(--surface); }
 
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
+  /* Modal — centered card, keyboard-safe via dvh */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 1.5rem; width: 100%; max-width: 500px; border-top: 0.5px solid var(--border-md); }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; width: 100%; max-width: 460px; max-height: calc(100dvh - 2rem); overflow-y: auto; border: 0.5px solid var(--border-md); }
   .modal h2 { font-size: 18px; font-weight: 400; margin-bottom: 1.25rem; }
-  .form-row { margin-bottom: 12px; }
+  .form-row { margin-bottom: 14px; }
   .form-label { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-bottom: 5px; display: block; letter-spacing: 0.05em; text-transform: uppercase; }
-  input[type="text"] { width: 100%; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; }
-  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"], select { width: 100%; background: var(--surface); color: var(--text); border: 0.5px solid var(--border-md); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; font-family: Helvetica Neue, Arial, sans-serif; outline: none; }
+  input[type="text"]:focus, select:focus { border-color: var(--accent); }
+  input[type="text"]:disabled { color: var(--text2); background: var(--surface2); }
   .btn-row { display: flex; gap: 8px; margin-top: 1.25rem; }
   .form-help { font-family: Helvetica Neue, Arial, sans-serif; font-size: 11px; color: var(--text3); margin-top: 4px; line-height: 1.4; }
 
@@ -197,15 +198,19 @@
   <div class="modal">
     <h2 id="modal-title">Add a plant</h2>
     <div class="form-row">
-      <label class="form-label">Display name</label>
+      <label class="form-label">Plant name</label>
       <input type="text" id="plant-edit-name" placeholder="e.g. Meyer Lemon" />
     </div>
     <div class="form-row">
-      <label class="form-label">Type line</label>
-      <input type="text" id="plant-edit-typeline" placeholder="e.g. Citrus · 15-gal pot" />
-      <div class="form-help">Shown in the Garden Update doc. Use a middle dot (·) between type and container.</div>
+      <label class="form-label">Type</label>
+      <select id="plant-edit-type" onchange="onTypeChange()"></select>
+      <input type="text" id="plant-edit-type-custom" placeholder="Describe the type (e.g. Subtropical)" style="margin-top:8px;display:none;" />
     </div>
-    <div class="form-row" id="slug-preview-row" style="display:none;">
+    <div class="form-row">
+      <label class="form-label">Planting</label>
+      <select id="plant-edit-container"></select>
+    </div>
+    <div class="form-row" id="slug-preview-row">
       <label class="form-label">Folder slug (auto)</label>
       <input type="text" id="plant-edit-slug" disabled />
       <div class="form-help">Photos saved as &lt;date&gt;_&lt;slug&gt;.jpg. Claude's skill must recognize this slug.</div>
@@ -241,6 +246,57 @@ const DEFAULT_PLANTS = [
 
 const PLANTS_FILE = 'plants.json';
 let plantsFileId = null;
+
+// Picker options for the plant-edit modal
+const TYPE_OPTIONS = [
+  'Stone fruit',
+  'Pome',
+  'Citrus',
+  'Subtropical',
+  'Berry',
+  'Vine fruit',
+  'Vegetable',
+  'Herb',
+  'Other'
+];
+const CONTAINER_OPTIONS = [
+  'in-ground',
+  'raised bed',
+  '5-gal pot',
+  '10-gal pot',
+  '15-gal pot',
+  '20-gal pot',
+  '25-gal pot',
+  'half barrel (30+ gal)',
+  'grow bag'
+];
+
+function parseTypeLine(typeLine) {
+  if (!typeLine) return { type: 'Stone fruit', container: '15-gal pot' };
+  const parts = typeLine.split('·').map(s => s.trim());
+  return { type: parts[0] || 'Stone fruit', container: parts[1] || '15-gal pot' };
+}
+function buildTypeLine(type, container, customType) {
+  const t = type === 'Other' ? (customType || 'Other') : type;
+  return `${t} · ${container}`;
+}
+function populateModalSelects(currentType, currentContainer) {
+  // Type select — include current value if it's not a standard option
+  const typeOpts = [...TYPE_OPTIONS];
+  const knownType = TYPE_OPTIONS.includes(currentType);
+  const typeSel = document.getElementById('plant-edit-type');
+  typeSel.innerHTML = typeOpts.map(t => `<option value="${t}">${t}</option>`).join('');
+  // Container select — preserve any legacy value not in the standard list
+  const contOpts = [...CONTAINER_OPTIONS];
+  if (currentContainer && !contOpts.includes(currentContainer)) contOpts.push(currentContainer);
+  const contSel = document.getElementById('plant-edit-container');
+  contSel.innerHTML = contOpts.map(c => `<option value="${c}">${c}</option>`).join('');
+  return { knownType };
+}
+function onTypeChange() {
+  const isOther = document.getElementById('plant-edit-type').value === 'Other';
+  document.getElementById('plant-edit-type-custom').style.display = isOther ? 'block' : 'none';
+}
 
 function loadPlants() {
   try {
@@ -586,14 +642,17 @@ let editingSlug = null;
 
 function openAddPlantModal() {
   editingSlug = null;
+  populateModalSelects('Stone fruit', '15-gal pot');
   document.getElementById('modal-title').textContent = 'Add a plant';
   document.getElementById('modal-save-btn').textContent = 'Add plant';
   document.getElementById('plant-edit-name').value = '';
-  document.getElementById('plant-edit-typeline').value = '';
+  document.getElementById('plant-edit-type').value = 'Stone fruit';
+  document.getElementById('plant-edit-type-custom').value = '';
+  document.getElementById('plant-edit-container').value = '15-gal pot';
   document.getElementById('plant-edit-slug').value = '';
-  document.getElementById('slug-preview-row').style.display = 'block';
+  onTypeChange();
   document.getElementById('plant-modal').classList.add('open');
-  // Live-update slug preview from the name
+  // Live-update slug preview from the name (add flow only)
   const nameInput = document.getElementById('plant-edit-name');
   nameInput.oninput = () => {
     document.getElementById('plant-edit-slug').value = slugify(nameInput.value);
@@ -604,12 +663,22 @@ function editPlant(slug) {
   const plant = PLANTS.find(p => p.slug === slug);
   if (!plant) return;
   editingSlug = slug;
+  const { type, container } = parseTypeLine(plant.typeLine);
+  populateModalSelects(type, container);
   document.getElementById('modal-title').textContent = 'Edit plant';
   document.getElementById('modal-save-btn').textContent = 'Save changes';
   document.getElementById('plant-edit-name').value = plant.name;
-  document.getElementById('plant-edit-typeline').value = plant.typeLine;
+  // Map parsed type to picker — fall back to Other + custom text if not standard
+  if (TYPE_OPTIONS.includes(type)) {
+    document.getElementById('plant-edit-type').value = type;
+    document.getElementById('plant-edit-type-custom').value = '';
+  } else {
+    document.getElementById('plant-edit-type').value = 'Other';
+    document.getElementById('plant-edit-type-custom').value = type;
+  }
+  document.getElementById('plant-edit-container').value = container;
   document.getElementById('plant-edit-slug').value = plant.slug;
-  document.getElementById('slug-preview-row').style.display = 'block';
+  onTypeChange();
   document.getElementById('plant-modal').classList.add('open');
   // For existing plants, slug stays fixed regardless of name edits
   document.getElementById('plant-edit-name').oninput = null;
@@ -625,9 +694,15 @@ document.getElementById('plant-modal').addEventListener('click', e => {
 
 function savePlantEdit() {
   const name = document.getElementById('plant-edit-name').value.trim();
-  const typeLine = document.getElementById('plant-edit-typeline').value.trim();
-  if (!name) { alert('Please enter a display name.'); return; }
-  if (!typeLine) { alert('Please enter a type line.'); return; }
+  if (!name) { alert('Please enter a plant name.'); return; }
+  const type = document.getElementById('plant-edit-type').value;
+  const customType = document.getElementById('plant-edit-type-custom').value.trim();
+  if (type === 'Other' && !customType) {
+    alert('Please describe the type.');
+    return;
+  }
+  const container = document.getElementById('plant-edit-container').value;
+  const typeLine = buildTypeLine(type, container, customType);
 
   if (editingSlug) {
     const plant = PLANTS.find(p => p.slug === editingSlug);
